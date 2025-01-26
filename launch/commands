@@ -1,0 +1,18 @@
+set instance robot1 robot
+set instance robot2 robot
+set instance station1 station
+set instance station2 station
+set instance station3 station
+set instance workpiece1 workpiece
+set instance workpiece2 workpiece
+set instance workpiece3 workpiece
+
+set predicate (robot_at robot1 station1)
+set predicate (robot_at robot2 station1)
+set predicate (robot_available robot1)
+set predicate (robot_available robot2)
+set predicate (piece_at workpiece1 station1)
+set predicate (piece_at workpiece2 station1)
+set predicate (piece_at workpiece3 station2)
+
+set goal (and(piece_at workpiece1 station3)(piece_at workpiece2 station3)(piece_at workpiece3 station3)(robot_available robot1)(robot_available robot2))
