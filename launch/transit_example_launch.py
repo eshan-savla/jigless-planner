@@ -45,20 +45,32 @@ def generate_launch_description():
 
     # Specify the actions
     move_robot_cmd = Node(
-        package='jigless-planner',
-        executable='move_robot_node',
-        name='move_robot_node',
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='move_robot',
         namespace=namespace,
         output='screen',
-        parameters=[])
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'move_robot',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/move_robot.xml'
+            }
+        ])
 
     move_workpiece_cmd = Node(
-        package='jigless-planner',
-        executable='move_workpiece_node',
-        name='move_workpiece_node',
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='move_workpiece',
         namespace=namespace,
         output='screen',
-        parameters=[])
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'move_workpiece',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/move_workpiece.xml'
+            }
+        ])
  # Create the launch description and populate
     ld = LaunchDescription()
 

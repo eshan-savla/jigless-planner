@@ -12,7 +12,13 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(plansys2_msgs REQUIRED)
+find_package(plansys2_domain_expert REQUIRED)
 find_package(plansys2_executor REQUIRED)
+find_package(plansys2_planner REQUIRED)
+find_package(plansys2_problem_expert REQUIRED)
+find_package(plansys2_pddl_parser REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(plansys2_bt_actions REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -20,7 +26,13 @@ set(dependencies
     rclcpp
     rclcpp_action
     plansys2_msgs
+    plansys2_domain_expert
     plansys2_executor
+    plansys2_planner
+    plansys2_problem_expert
+    plansys2_pddl_parser
+    ament_index_cpp
+    plansys2_bt_actions
 )
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -28,21 +40,34 @@ set(dependencies
 
 include_directories(include)
 
-add_executable(move_robot_node src/move_robot_action_node.cpp)
-ament_target_dependencies(move_robot_node ${dependencies})
+# add_executable(move_robot_node src/move_robot_action_node.cpp)
+# ament_target_dependencies(move_robot_node ${dependencies})
 
-add_executable(move_workpiece_node src/move_workpiece_action_node.cpp)
-ament_target_dependencies(move_workpiece_node ${dependencies})
+# add_executable(move_workpiece_node src/move_workpiece_action_node.cpp)
+# ament_target_dependencies(move_workpiece_node ${dependencies})
+
+add_library(jigless_planner_move_robot_bt_node SHARED src/behavior_tree_nodes/MoveRobot.cpp)
+list(APPEND plugin_libs jigless_planner_move_robot_bt_node)
+
+add_library(jigless_planner_move_workpiece_bt_node SHARED src/behavior_tree_nodes/MoveWorkpiece.cpp)
+list(APPEND plugin_libs jigless_planner_move_workpiece_bt_node)
+
+foreach(bt_plugin ${plugin_libs})
+  ament_target_dependencies(${bt_plugin} ${dependencies})
+  target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
+endforeach()
+
 
 add_executable(bottom_controller_node src/bottom_controller_node.cpp)
 ament_target_dependencies(bottom_controller_node ${dependencies})
 
-install (DIRECTORY launch pddl DESTINATION share/${PROJECT_NAME})
+install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  move_robot_node
-  move_workpiece_node
+  # move_robot_node
+  # move_workpiece_node
   bottom_controller_node
+  ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

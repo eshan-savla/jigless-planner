@@ -72,6 +72,7 @@ class TransitController : public rclcpp::Node
                 }
                 return result->success;
             }
+            return false;
         };
 
         void step() {
