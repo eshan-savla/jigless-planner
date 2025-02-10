@@ -16,8 +16,8 @@
     (not (workpiece_held workpiece1))
     (not (workpiece_held workpiece2))
 
-    (not (transit_allowed workpiece1))
-    (not (transit_allowed workpiece2))
+    (transit_allowed workpiece1)
+    (transit_allowed workpiece2)
 
     (has_joint workpiece1 joint1)
     (has_joint workpiece1 joint2)
