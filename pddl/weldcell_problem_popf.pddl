@@ -12,8 +12,11 @@
     (is_free robot1)
     (is_free robot2)
 
+    (workpiece_unjoined workpiece1)
+    (workpiece_unjoined workpiece2)
+
     (workpiece_orientation workpiece1 joint0)
-    (workpiece_orientation workpiece2 joint1)
+    (workpiece_orientation workpiece2 joint0)
     ; (workpiece_orientation workpiece3 joint0)
 
     (not_workpiece_held workpiece1)

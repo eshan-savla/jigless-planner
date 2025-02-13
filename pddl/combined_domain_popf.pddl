@@ -15,15 +15,11 @@
     (depends_on ?j1 ?j2 - joint)
     (welded ?j - joint)
     (not_welded ?j - joint)
+    (workpiece_unjoined ?w - workpiece)
     (fused ?w1 ?w2 - workpiece)
     (is_free ?r - robot)
     (workpiece_held_by ?w - workpiece ?r - robot)
   )
-
-  ; (:functions 
-  ;   (robots_available)
-  ;   (robots_needed ?w - workpiece)
-  ; )
 
   (:durative-action transit
     :parameters (?w - workpiece ?r - robot ?from ?to - joint)
@@ -34,13 +30,12 @@
             (is_free ?r)
           ))
           (over all (and
-            (not_workpiece_held ?w)            
+            (workpiece_unjoined ?w)
+            (not_workpiece_held ?w)
             (has_joint ?w ?from)
             (has_joint ?w ?to)
-            (workpiece_held_by ?w ?r)
           ))
           )
-            
       
     :effect (and
         (at start (not (is_free ?r)))
@@ -50,7 +45,49 @@
         (at end (workpiece_orientation ?w ?to))
         (at end (not (workpiece_held_by ?w ?r)))
     )
-  )  
+  )
+
+  (:durative-action transit-fused
+      :parameters (?w1 ?w2 - workpiece ?r - robot ?from ?to - joint)
+      :duration (= ?duration 5)
+      :condition (and 
+          (at start (and 
+            (fused ?w1 ?w2)
+            (workpiece_orientation ?w1 ?from)
+            (workpiece_orientation ?w2 ?from)
+            (is_free ?r)
+          ))
+          (over all (and
+            (not_workpiece_held ?w1)
+            (not_workpiece_held ?w2)
+            (and
+              (has_joint ?w1 ?from)
+              (has_joint ?w2 ?from)
+            )
+            (and
+              (has_joint ?w1 ?to)
+              (has_joint ?w2 ?to)
+            )
+          ))
+      )
+      :effect (and 
+          (at start (and 
+            (not (is_free ?r))
+            (not (workpiece_orientation ?w1 ?from))
+            (not (workpiece_orientation ?w2 ?from))
+            (workpiece_held_by ?w1 ?r)
+            (workpiece_held_by ?w2 ?r)
+          ))
+          (at end (and 
+            (is_free ?r)
+            (workpiece_orientation ?w1 ?to)
+            (workpiece_orientation ?w2 ?to)
+            (not (workpiece_held_by ?w1 ?r))
+            (not (workpiece_held_by ?w2 ?r))
+          ))
+      )
+  )
+    
 
   (:durative-action weld
     :parameters (?j - joint ?w1 ?w2 - workpiece)
@@ -69,6 +106,12 @@
           ))
         )
     :effect (and 
+          (at start (and
+            (fused ?w1 ?w2)
+            (fused ?w2 ?w1)
+            (not (workpiece_unjoined ?w1))
+            (not (workpiece_unjoined ?w2))
+          ))
           (at end (and 
                 (welded ?j)
                 (not (not_welded ?j))
