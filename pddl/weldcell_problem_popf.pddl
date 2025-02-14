@@ -1,6 +1,6 @@
 (define (problem weldcell_problem_popf) (:domain combined_domain_popf)
 (:objects
-    workpiece1 workpiece2  - workpiece ; workpiece3
+    workpiece1 workpiece2 workpiece3 - workpiece ; 
     joint0 joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 - joint
     ;joint0 refers to initial position/orientation and is not actually a joint
     robot1 robot2 - robot
@@ -12,16 +12,32 @@
     (is_free robot1)
     (is_free robot2)
 
-    (workpiece_unjoined workpiece1)
-    (workpiece_unjoined workpiece2)
+    ; (workpiece_unjoined workpiece1)
+    ; (workpiece_unjoined workpiece2)
+    ; (workpiece_unjoined workpiece3)
+
+    (not_fused workpiece1 workpiece2)
+    (not_fused workpiece1 workpiece3)
+    (not_fused workpiece2 workpiece3)
+    (not_fused workpiece2 workpiece1)
+    (not_fused workpiece3 workpiece1)
+    (not_fused workpiece3 workpiece2)
+
+    ; (fused workpiece1 workpiece3)
+    ; (fused workpiece3 workpiece1)
+
 
     (workpiece_orientation workpiece1 joint0)
     (workpiece_orientation workpiece2 joint0)
-    ; (workpiece_orientation workpiece3 joint0)
+    (workpiece_orientation workpiece3 joint0)
 
     (not_workpiece_held workpiece1)
     (not_workpiece_held workpiece2)
-    ; (not_workpiece_held workpiece3)
+    (not_workpiece_held workpiece3)
+
+    (not_workpiece_moved workpiece1)
+    (not_workpiece_moved workpiece2)
+    (not_workpiece_moved workpiece3)
 
     (has_joint workpiece1 joint0)
     (has_joint workpiece1 joint1)
@@ -40,10 +56,10 @@
     (has_joint workpiece2 joint4)
     (has_joint workpiece2 joint5)
 
-    ; (has_joint workpiece3 joint0)
-    ; (has_joint workpiece3 joint6)
-    ; (has_joint workpiece3 joint7)
-    ; (has_joint workpiece3 joint8)
+    (has_joint workpiece3 joint0)
+    (has_joint workpiece3 joint6)
+    (has_joint workpiece3 joint7)
+    (has_joint workpiece3 joint8)
 
     (depends_on joint3 joint1)
     (depends_on joint4 joint2)
@@ -81,7 +97,7 @@
         (welded joint3)
         (welded joint4)
         (welded joint5)
-        ; (welded joint6)
+        (welded joint6)
         ; (welded joint7)
         ; (welded joint8)
     )
