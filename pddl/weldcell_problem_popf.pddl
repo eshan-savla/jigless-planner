@@ -16,15 +16,24 @@
     ; (workpiece_unjoined workpiece2)
     ; (workpiece_unjoined workpiece3)
 
+
+    ; (workpiece_held workpiece1)
+    ; (workpiece_held workpiece2)
+    ; (workpiece_held_by workpiece1 robot1)
+    ; (workpiece_held_by workpiece2 robot2)
+
+    ; (workpiece_validated workpiece1)
+    ; (workpiece_validated workpiece2)
+
     (not_fused workpiece1 workpiece2)
-    (not_fused workpiece1 workpiece3)
-    (not_fused workpiece2 workpiece3)
     (not_fused workpiece2 workpiece1)
+    (not_fused workpiece1 workpiece3)
     (not_fused workpiece3 workpiece1)
+    (not_fused workpiece2 workpiece3)
     (not_fused workpiece3 workpiece2)
 
-    ; (fused workpiece1 workpiece3)
-    ; (fused workpiece3 workpiece1)
+    ; (fused workpiece1 workpiece2)
+    ; (fused workpiece2 workpiece1)
 
 
     (workpiece_orientation workpiece1 joint0)
@@ -79,6 +88,12 @@
     (not_seam_measured joint7)
     (not_seam_measured joint8)
 
+    ; (seam_measured joint1)
+    ; (seam_measured joint2)
+    ; (seam_measured joint3)
+    ; (seam_measured joint4)
+    ; (seam_measured joint5)
+
     (not_welded joint1)
     (not_welded joint2)
     (not_welded joint3)
@@ -87,6 +102,12 @@
     (not_welded joint6)
     (not_welded joint7)
     (not_welded joint8)
+
+    ; (welded joint1)
+    ; (welded joint2)
+    ; (welded joint3)
+    ; (welded joint4)
+    ; (welded joint5)
 )
 
 (:goal
@@ -98,8 +119,8 @@
         (welded joint4)
         (welded joint5)
         (welded joint6)
-        ; (welded joint7)
-        ; (welded joint8)
+        (welded joint7)
+        (welded joint8)
     )
 )
 

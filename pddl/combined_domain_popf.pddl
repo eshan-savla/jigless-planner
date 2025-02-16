@@ -71,6 +71,7 @@
             (not_workpiece_held ?w2)
             (has_joint ?w1 ?from) ; as only one of the fused pieces needs to have this condition
             (has_joint ?w1 ?to)
+            (not (= ?w1 ?w2))
           ))
       )
       :effect (and 
@@ -109,6 +110,9 @@
             (not_workpiece_held ?w3)
             (has_joint ?w1 ?from) ; as only one of the fused pieces needs to have this condition
             (has_joint ?w1 ?to)
+            (not (= ?w1 ?w2))
+            (not (= ?w1 ?w3))
+            (not (= ?w2 ?w3))
           ))
       )
       :effect (and 
