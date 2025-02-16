@@ -165,8 +165,6 @@
             (fused ?w2 ?w1)
             (not (not_fused ?w1 ?w2))
             (not (not_fused ?w2 ?w1))
-            ; (not (workpiece_unjoined ?w1))
-            ; (not (workpiece_unjoined ?w2))
           ))
           (at end (and 
                 (welded ?j)
