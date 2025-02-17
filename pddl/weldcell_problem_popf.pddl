@@ -31,6 +31,17 @@
     (not_workpiece_moved workpiece2)
     (not_workpiece_moved workpiece3)
 
+    (not_workpiece_held_by workpiece1 robot1)
+    (not_workpiece_held_by workpiece1 robot2)
+    (not_workpiece_held_by workpiece2 robot1)
+    (not_workpiece_held_by workpiece2 robot2)
+    (not_workpiece_held_by workpiece3 robot1)
+    (not_workpiece_held_by workpiece3 robot2)
+
+    (resting workpiece1)
+    (resting workpiece2)
+    (resting workpiece3)
+
     (has_joint workpiece1 joint0)
     (has_joint workpiece1 joint1)
     (has_joint workpiece1 joint2)
@@ -93,6 +104,13 @@
         (welded joint6)
         (welded joint7)
         (welded joint8)
+        ; (workpiece_orientation workpiece1 joint2)
+        ; (workpiece_orientation workpiece2 joint2)
+        ; (not (workpiece_held workpiece1))
+        ; (not (workpiece_held workpiece2))
+        ; (workpiece_held workpiece1)
+        ; (workpiece_held workpiece2)
+        
     )
 )
 
