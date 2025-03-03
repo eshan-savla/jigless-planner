@@ -1,7 +1,7 @@
 <root main_tree_to_execute = "MainTree" >
     <BehaviorTree ID="MainTree">
        <Sequence name="root_sequence">
-           <MoveWorkpiece    name="move_workpiece"/>
+           <Validate    name="validate"/>
        </Sequence>
     </BehaviorTree>
 </root>

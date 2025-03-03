@@ -33,53 +33,21 @@ def generate_launch_description():
         default_value='',
         description='Namespace')
 
-    plansys2_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('plansys2_bringup'),
-            'launch',
-            'plansys2_bringup_launch_distributed.py')),
-        launch_arguments={
-          'model_file': example_dir + '/pddl/transit_domain.pddl',
-          'namespace': namespace
-          }.items())
-
-    # Specify the actions
-    move_robot_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='move_robot',
+    
+    bottom_controller = Node(
+        package='jigless-planner',
+        executable='bottom_controller_node',
+        name='validate',
         namespace=namespace,
         output='screen',
-        parameters=[
-            example_dir + '/config/params.yaml',
-            {
-                'action_name': 'move_robot',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/move_robot.xml'
-            }
-        ])
-
-    move_workpiece_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='move_workpiece',
-        namespace=namespace,
-        output='screen',
-        parameters=[
-            example_dir + '/config/params.yaml',
-            {
-                'action_name': 'move_workpiece',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/move_workpiece.xml'
-            }
-        ])
+        parameters=[]
+    )
+    
  # Create the launch description and populate
     ld = LaunchDescription()
 
     ld.add_action(declare_namespace_cmd)
 
     # Declare the launch options
-    ld.add_action(plansys2_cmd)
-
-    ld.add_action(move_robot_cmd)
-    ld.add_action(move_workpiece_cmd)
-
+    ld.add_action(bottom_controller)
     return ld

@@ -1,18 +1,18 @@
-#ifndef JIGLESSPLANNER_MOVE_WORKPIECE_HPP
-#define JIGLESSPLANNER_MOVE_WORKPIECE_HPP
+#ifndef JIGLESSPLANNER_VALIDATE_HPP
+#define JIGLESSPLANNER_VALIDATE_HPP
 
 #include <string>
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 
-namespace jigless_planner_transit
+namespace jigless_planner_weld
 {
 
-class MoveWorkpiece : public BT::ActionNodeBase
+class Validate : public BT::ActionNodeBase
 {
 public:
-  explicit MoveWorkpiece(
+  explicit Validate(
     const std::string & xml_tag_name,
     const BT::NodeConfiguration & conf);
 
@@ -30,4 +30,4 @@ private:
 
 }  // namespace jigless_planner_transit
 
-#endif  // JIGLESSPLANNER_MOVE_WORKPIECE_HPP
+#endif  // JIGLESSPLANNER_VALIDATE_HPP

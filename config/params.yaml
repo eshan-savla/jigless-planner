@@ -1,8 +1,12 @@
-move_robot:
+transit:
   ros__parameters:
     plugins:
-      - jigless_planner_move_robot_bt_node
-move_workpiece:
+      - jigless_planner_transit_bt_node
+weld:
   ros__parameters:
     plugins:
-      - jigless_planner_move_workpiece_bt_node
+      - jigless_planner_weld_bt_node
+validate:
+  ros__parameters:
+    plugins:
+      - jigless_planner_validate_bt_node

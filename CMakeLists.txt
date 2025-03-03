@@ -40,17 +40,23 @@ set(dependencies
 
 include_directories(include)
 
-# add_executable(move_robot_node src/move_robot_action_node.cpp)
-# ament_target_dependencies(move_robot_node ${dependencies})
+# add_executable(transit_action_node src/transit_action_node.cpp)
+# ament_target_dependencies(transit_action_node ${dependencies})
 
-# add_executable(move_workpiece_node src/move_workpiece_action_node.cpp)
-# ament_target_dependencies(move_workpiece_node ${dependencies})
+# add_executable(weld_action_node src/weld_action_node.cpp)
+# ament_target_dependencies(weld_action_node ${dependencies})
 
-add_library(jigless_planner_move_robot_bt_node SHARED src/behavior_tree_nodes/MoveRobot.cpp)
-list(APPEND plugin_libs jigless_planner_move_robot_bt_node)
+# add_executable(validate_action_node src/validate_action_node.cpp)
+# ament_target_dependencies(validate_action_node ${dependencies})
 
-add_library(jigless_planner_move_workpiece_bt_node SHARED src/behavior_tree_nodes/MoveWorkpiece.cpp)
-list(APPEND plugin_libs jigless_planner_move_workpiece_bt_node)
+add_library(jigless_planner_transit_bt_node SHARED src/behavior_tree_nodes/Transit.cpp)
+list(APPEND plugin_libs jigless_planner_transit_bt_node)
+
+add_library(jigless_planner_weld_bt_node SHARED src/behavior_tree_nodes/Weld.cpp)
+list(APPEND plugin_libs jigless_planner_weld_bt_node)
+
+add_library(jigless_planner_validate_bt_node SHARED src/behavior_tree_nodes/Validate.cpp)
+list(APPEND plugin_libs jigless_planner_validate_bt_node)
 
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
@@ -64,10 +70,11 @@ ament_target_dependencies(bottom_controller_node ${dependencies})
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  # move_robot_node
-  # move_workpiece_node
+  jigless_planner_transit_bt_node
+  jigless_planner_weld_bt_node
+  jigless_planner_validate_bt_node
   bottom_controller_node
-  ${plugin_libs}
+  # ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

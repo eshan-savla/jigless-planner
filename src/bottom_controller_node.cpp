@@ -21,8 +21,8 @@ class TransitController : public rclcpp::Node
     public:
         TransitController() : rclcpp::Node("transit_controller"), state_(STARTING)
         {
-            this->declare_parameter("goal", "(and (piece_at workpiece1 station3) (piece_at workpiece2 station3) (piece_at workpiece3 station3) (robot_available robot1) (robot_available robot2))");
-            this->declare_parameter("problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/transit_problem.pddl");
+            this->declare_parameter("goal", "(and (welded joint1) (welded joint2) (welded joint3) (welded joint4) (welded joint5))"); //  (welded joint6) (welded joint7) (welded joint8)
+            this->declare_parameter("problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
             add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("/problem_expert/add_problem");
         };
 

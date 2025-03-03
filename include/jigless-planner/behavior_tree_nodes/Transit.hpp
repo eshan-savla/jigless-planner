@@ -1,5 +1,5 @@
-#ifndef JIGLESSPLANNER_MOVE_ROBOT_HPP
-#define JIGLESSPLANNER_MOVE_ROBOT_HPP
+#ifndef JIGLESSPLANNER_TRANSIT_HPP
+#define JIGLESSPLANNER_TRANSIT_HPP
 
 #include <string>
 
@@ -9,10 +9,10 @@
 namespace jigless_planner_transit
 {
 
-class MoveRobot : public BT::ActionNodeBase
+class Transit : public BT::ActionNodeBase
 {
 public:
-  explicit MoveRobot(
+  explicit Transit(
     const std::string & xml_tag_name,
     const BT::NodeConfiguration & conf);
 
@@ -30,4 +30,4 @@ private:
 
 }  // namespace jigless_planner_transit
 
-#endif  // JIGLESSPLANNER_MOVE_ROBOT_HPP
+#endif  // JIGLESSPLANNER_TRANSIT_HPP

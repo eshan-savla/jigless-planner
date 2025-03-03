@@ -1,4 +1,4 @@
-(define (domain weld_domain)
+(define (domain combined_domain_joints)
   (:requirements :strips :typing :adl :durative-actions :fluents :conditional-effects)
   
   (:types 
@@ -14,9 +14,25 @@
     (not_welded ?j - joint)
   )
 
+  (:durative-action transit
+    :parameters (?from ?to - joint)
+    :duration (= ?duration 1)
+    :condition (and
+          (at start (and
+            (joint_orientation ?from)
+          ))
+          )
+      
+    :effect (and
+        (at start (not (joint_orientation ?from)))
+
+        (at end (joint_orientation ?to))
+    )
+  ) 
+
   (:durative-action weld
     :parameters (?j - joint)
-    :duration (= ?duration 10)
+    :duration (= ?duration 1)
     :condition (and (over all (and 
             (not_welded ?j)
             (seam_measured ?j)
@@ -34,7 +50,7 @@
   
   (:durative-action validate
       :parameters (?j - joint)
-      :duration (= ?duration 4)
+      :duration (= ?duration 1)
       :condition (and 
           (at start (and 
               (not_seam_measured ?j)
@@ -51,5 +67,4 @@
           ))
       )
   )
-
 )
