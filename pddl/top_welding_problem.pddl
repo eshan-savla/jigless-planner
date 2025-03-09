@@ -1,0 +1,38 @@
+(define (problem welding-problem)
+  (:domain welding-top)
+  (:objects
+    robot1 - robot
+    joint1 joint2 joint3 joint4 joint5 joint6 - joint
+    pos1 pos2 - position
+  )
+  (:init
+    (not_welded joint1)
+    (not_welded joint2)
+    (not_welded joint3)
+    (not_welded joint4)
+    (not_welded joint5)
+    (not_welded joint6)
+    (reachable_at joint1 pos1)
+    (reachable_at joint2 pos1)
+    (reachable_at joint3 pos1)
+    (reachable_at joint4 pos2)
+    (reachable_at joint5 pos2)
+    (reachable_at joint6 pos2)
+    (at robot1 pos1)
+    (depends_on joint2 joint1)
+    (depends_on joint3 joint1)
+    (depends_on joint5 joint4)
+    (depends_on joint6 joint5)
+    (not_executed)
+  )
+  (:goal
+    (and
+      (welded joint1)
+      (welded joint2)
+      (welded joint3)
+      (welded joint4)
+      (welded joint5)
+      (welded joint6)
+    )
+  )
+)
