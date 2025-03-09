@@ -10,7 +10,10 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(lifecycle_msgs REQUIRED)
 find_package(plansys2_msgs REQUIRED)
 find_package(plansys2_domain_expert REQUIRED)
 find_package(plansys2_executor REQUIRED)
@@ -19,6 +22,7 @@ find_package(plansys2_problem_expert REQUIRED)
 find_package(plansys2_pddl_parser REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(plansys2_bt_actions REQUIRED)
+find_package(jigless_planner_interfaces REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -64,8 +68,8 @@ foreach(bt_plugin ${plugin_libs})
 endforeach()
 
 
-add_executable(bottom_controller_node src/bottom_controller_node.cpp)
-ament_target_dependencies(bottom_controller_node ${dependencies})
+add_executable(bottom_controller_node src/BottomControllerNode.cpp)
+ament_target_dependencies(bottom_controller_node ${dependencies} rclcpp_components rclcpp_lifecycle lifecycle_msgs jigless_planner_interfaces)
 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
