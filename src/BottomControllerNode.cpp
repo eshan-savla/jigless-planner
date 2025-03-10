@@ -10,6 +10,7 @@ namespace jigless_planner
   CallbackReturnT BottomControllerNode::on_configure(const rclcpp_lifecycle::State & previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Configuring bottom controller node");
+    LifecycleNode::on_configure(previous_state);
     init();
     if (init_knowledge()) {
       RCLCPP_INFO(this->get_logger(), "Knowledge initialized");
@@ -42,7 +43,7 @@ namespace jigless_planner
     std::ifstream problem_file(problem_file_path);
     if (!problem_file.is_open()) {
       RCLCPP_ERROR(this->get_logger(), "Failed to open problem file: %s", problem_file_path.c_str());
-      return;
+      return false;
     }
 
     std::stringstream buffer;
@@ -53,17 +54,19 @@ namespace jigless_planner
     while(!add_problem_client_->wait_for_service(std::chrono::seconds(1))){
       if (!rclcpp::ok()){
         RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
-        return;
+        return false;
       }
       RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
     }
     auto result = add_problem_client_->async_send_request(request, std::bind(&BottomControllerNode::response_callback, this, std::placeholders::_1));
+    return true;
   };
 
   bool BottomControllerNode::response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future)
   {
-    auto status = future.wait_for(std::chrono::seconds(1));
-    if (status == std::future_status::ready){
+    using namespace std::literals::chrono_literals;
+    auto status = future.wait_for(1s);
+    if (status == std::future_status::ready) {
     auto result = future.get();
     if (result->success){
       RCLCPP_INFO(this->get_logger(), "Problem added");
@@ -78,6 +81,7 @@ namespace jigless_planner
   CallbackReturnT BottomControllerNode::on_activate(const rclcpp_lifecycle::State & previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Activating bottom controller node");
+    LifecycleNode::on_activate(previous_state);
     activated_ = true;
     return CallbackReturnT::SUCCESS;
   }
@@ -86,8 +90,12 @@ namespace jigless_planner
     const rclcpp_action::GoalUUID & uuid,
     std::shared_ptr<const RunBottom::Goal> goal)
   {
-    (void)goal;
-    RCLCPP_INFO(this->get_logger(), "Received goal request with ID: %s", uuid.str().c_str());
+    (void)uuid;
+    std::stringstream goal_ss;
+    for (const auto &joint : goal->joints) {
+      goal_ss << joint << " ";
+    }
+    RCLCPP_INFO(this->get_logger(), "Received goal request for joints: %s", goal_ss.str().c_str());
     if (this->get_current_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     } else {
@@ -194,6 +202,8 @@ namespace jigless_planner
       if (goal_handle->is_canceling()) {
         RCLCPP_INFO(this->get_logger(), "Cancelling goal");
         executor_client_->cancel_plan_execution();
+        result->success = false;
+        result->failed_joints = get_unfinished_action_args(executor_client_->getFeedBack().action_execution_status);
         goal_handle->canceled(result);
         break;
       }
@@ -202,6 +212,8 @@ namespace jigless_planner
       if (executor_client_->execute_and_check_plan())
       { // Plan finished
         auto plan_result = executor_client_->getResult();
+        result->success = plan_result.value().success;
+        result->failed_joints = get_unfinished_action_args(plan_result.value().action_execution_status);
         if (plan_result.value().success) {
           RCLCPP_INFO(this->get_logger(), "Plan successfully finished");
           goal_handle->succeed(result);
@@ -225,6 +237,7 @@ namespace jigless_planner
     interim_goal_ = problem_expert_->getGoal();
     // Clear goal
     problem_expert_->clearGoal(); // Should it though?
+    LifecycleNode::on_deactivate(previous_state);
     return CallbackReturnT::SUCCESS;
   }
 
@@ -244,7 +257,7 @@ namespace jigless_planner
     executor_client_.reset();
     action_server_.reset();
     add_problem_client_.reset();
-
+    LifecycleNode::on_cleanup(previous_state);
     return CallbackReturnT::SUCCESS;
   }
 
@@ -266,17 +279,36 @@ namespace jigless_planner
     
     // Deactivate the node
     activated_ = false;
+    LifecycleNode::on_shutdown(previous_state);
     return CallbackReturnT::SUCCESS;
+  }
+
+  std::vector<std::string> BottomControllerNode::get_unfinished_action_args(
+    const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result, 
+    const std::string & action_name)
+  {
+    std::list<std::string> unfinished_joints_list;
+    for (const auto & action : result) {
+      if (action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED || action.action != action_name)
+        continue;
+      unfinished_joints_list.insert(unfinished_joints_list.end(), action.arguments.begin(), action.arguments.end());
+    }
+    std::vector<std::string> unfinished_joints{std::make_move_iterator(unfinished_joints_list.begin()),
+      std::make_move_iterator(unfinished_joints_list.end())};
+    // unfinished_joints.reserve(unfinished_joints_list.size());
+    // std::copy(unfinished_joints_list.begin(), unfinished_joints_list.end(), std::back_inserter(unfinished_joints));
+    return unfinished_joints;
   }
 }
 
 int main(int argc, char **argv)
 {
 rclcpp::init(argc, argv);
-auto node = std::make_shared<jigless_planner::BottomControllerNode>();
+auto node = std::make_shared<jigless_planner::BottomControllerNode>("bottom_controller_node");
 rclcpp::executors::MultiThreadedExecutor executor;
 executor.add_node(node->get_node_base_interface());
 executor.spin();
+
 rclcpp::shutdown();
 return 0;
 }

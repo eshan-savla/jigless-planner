@@ -60,7 +60,9 @@ namespace jigless_planner
     void init();
     bool init_knowledge();
     bool response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future);
-    void execute(const std::shared_ptr<GoalHandleRunBottom> goal_handle);
+    std::vector<std::string> get_unfinished_action_args(
+      const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result,
+      const std::string & action_name = "weld");
 
     rclcpp_action::GoalResponse handle_goal(
       const rclcpp_action::GoalUUID & uuid,
@@ -69,6 +71,7 @@ namespace jigless_planner
       const std::shared_ptr<GoalHandleRunBottom> goal_handle);
     void handle_accepted(
       const std::shared_ptr<GoalHandleRunBottom> goal_handle);
+    void execute(const std::shared_ptr<GoalHandleRunBottom> goal_handle);
 
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;
@@ -84,3 +87,5 @@ namespace jigless_planner
     //     const rclcpp_lifecycle::State &previous_state) override;
   };
 }
+
+#endif  // JIGLESS_PLANNER__BOTTOM_CONTROLLER_NODE_HPP_
