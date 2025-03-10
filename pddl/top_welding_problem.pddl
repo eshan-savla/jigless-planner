@@ -1,7 +1,6 @@
 (define (problem welding-problem)
   (:domain welding-top)
   (:objects
-    robot1 - robot
     joint1 joint2 joint3 joint4 joint5 joint6 - joint
     pos1 pos2 - position
   )
@@ -18,7 +17,7 @@
     (reachable_at joint4 pos2)
     (reachable_at joint5 pos2)
     (reachable_at joint6 pos2)
-    (at robot1 pos1)
+    (at pos1)
     (depends_on joint2 joint1)
     (depends_on joint3 joint1)
     (depends_on joint5 joint4)
@@ -31,7 +30,7 @@
       (welded joint2)
       (welded joint3)
       (welded joint4)
-      (welded joint5)
+      ; (welded joint5)
       (welded joint6)
     )
   )
