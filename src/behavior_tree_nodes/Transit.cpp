@@ -5,7 +5,7 @@
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 
-namespace jigless_bottom_planner
+namespace jigless_planner::bottom_actions
 {
   namespace transit
   {
@@ -35,10 +35,10 @@ namespace jigless_bottom_planner
       }
     }
   } // namespace transit
-}  // namespace jigless_bottom_planner
+}  // namespace jigless_planner::bottom_actions
 
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<jigless_bottom_planner::transit::Transit>("Transit");
+  factory.registerNodeType<jigless_planner::bottom_actions::transit::Transit>("Transit");
 }

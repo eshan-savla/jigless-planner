@@ -5,7 +5,7 @@
 
 #include "behaviortree_cpp_v3/behavior_tree.h"
 
-namespace jigless_planner_weld
+namespace jigless_planner::bottom_actions
 {
   namespace weld
   {
@@ -40,5 +40,5 @@ namespace jigless_planner_weld
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<jigless_planner_weld::weld::Validate>("Validate");
+  factory.registerNodeType<jigless_planner::bottom_actions::weld::Validate>("Validate");
 }

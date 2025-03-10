@@ -6,7 +6,7 @@
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 
-namespace jigless_top_planner
+namespace jigless_planner::top_actions
 {
 
   class SetStatus : public BT::ActionNodeBase
@@ -28,6 +28,6 @@ namespace jigless_top_planner
     int counter_;
   };
 
-}  // namespace_ jigless_top_planner
+}  // namespace_ jigless_planner
 
 #endif  // JIGLESSPLANNER_SETSTATUS_HPP

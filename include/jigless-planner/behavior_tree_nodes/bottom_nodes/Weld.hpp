@@ -6,7 +6,7 @@
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 
-namespace jigless_planner_weld
+namespace jigless_planner::bottom_actions
 {
   namespace weld 
   {
@@ -29,6 +29,6 @@ namespace jigless_planner_weld
       int counter_;
     };
   }
-}  // namespace jigless_bottom_planner
+}  // namespace jigless_planner::bottom_actions
 
 #endif  // JIGLESSPLANNER_WELD_HPP
