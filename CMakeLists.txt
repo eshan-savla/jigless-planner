@@ -25,6 +25,8 @@ find_package(plansys2_bt_actions REQUIRED)
 find_package(jigless_planner_interfaces REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 set(dependencies
     rclcpp
@@ -70,6 +72,9 @@ endforeach()
 
 add_executable(bottom_controller_node src/BottomControllerNode.cpp)
 ament_target_dependencies(bottom_controller_node ${dependencies} rclcpp_components rclcpp_lifecycle lifecycle_msgs jigless_planner_interfaces)
+
+add_executable(top_controller_node src/TopControllerNode.cpp)
+ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components lifecycle_msgs)
 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
