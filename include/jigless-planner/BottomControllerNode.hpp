@@ -1,3 +1,6 @@
+#ifndef JIGLESS_PLANNER__BOTTOM_CONTROLLER_NODE_HPP_
+#define JIGLESS_PLANNER__BOTTOM_CONTROLLER_NODE_HPP_
+
 #include <chrono>
 #include <functional>
 #include <memory>
