@@ -74,7 +74,7 @@ add_executable(bottom_controller_node src/BottomControllerNode.cpp)
 ament_target_dependencies(bottom_controller_node ${dependencies} rclcpp_components rclcpp_lifecycle lifecycle_msgs jigless_planner_interfaces)
 
 add_executable(top_controller_node src/TopControllerNode.cpp)
-ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components lifecycle_msgs)
+ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components lifecycle_msgs jigless_planner_interfaces)
 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
@@ -83,6 +83,7 @@ install(TARGETS
   jigless_planner_weld_bt_node
   jigless_planner_validate_bt_node
   bottom_controller_node
+  top_controller_node
   # ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
