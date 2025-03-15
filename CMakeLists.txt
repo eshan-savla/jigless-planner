@@ -55,6 +55,9 @@ include_directories(include)
 # add_executable(validate_action_node src/validate_action_node.cpp)
 # ament_target_dependencies(validate_action_node ${dependencies})
 
+add_executable(execute_bottom_node src/ExecuteBottom.cpp)
+ament_target_dependencies(execute_bottom_node ${dependencies} rclcpp_components jigless_planner_interfaces)
+
 add_library(jigless_planner_transit_bt_node SHARED src/behavior_tree_nodes/Transit.cpp)
 list(APPEND plugin_libs jigless_planner_transit_bt_node)
 
@@ -84,6 +87,7 @@ install(TARGETS
   jigless_planner_validate_bt_node
   bottom_controller_node
   top_controller_node
+  execute_bottom_node
   # ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
