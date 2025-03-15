@@ -34,7 +34,7 @@ namespace jigless_planner
       std::bind(&BottomControllerNode::handle_cancel, this, std::placeholders::_1),
       std::bind(&BottomControllerNode::handle_accepted, this, std::placeholders::_1));
     this->declare_parameter("problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
-    add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("/problem_expert/add_problem");
+    add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("problem_expert/add_problem");
   };
 
   bool BottomControllerNode::init_knowledge()
@@ -92,7 +92,7 @@ namespace jigless_planner
   {
     (void)uuid;
     std::stringstream goal_ss;
-    for (const auto &joint : goal->joints) {
+    for (const auto &joint : goal->joints.joints) {
       goal_ss << joint << " ";
     }
     RCLCPP_INFO(this->get_logger(), "Received goal request for joints: %s", goal_ss.str().c_str());
@@ -131,7 +131,7 @@ namespace jigless_planner
     {
       case RunBottom::Goal::START: {
         RCLCPP_INFO(this->get_logger(), "Setting joints as goal");
-        for (const auto & joint : goal->joints) {
+        for (const auto & joint : goal->joints.joints) {
           goal_str << "(welded " << joint << ") ";
         }
         break;
@@ -143,7 +143,7 @@ namespace jigless_planner
         interim_str.pop_back();
         interim_str.pop_back();
         goal_str << interim_str;
-        for (const auto & joint : goal->joints) {
+        for (const auto & joint : goal->joints.joints) {
           goal_str << "(welded " << joint << ") ";
         }
         break;
@@ -153,7 +153,7 @@ namespace jigless_planner
         goal_str.clear();
         auto interim_copy = interim_goal_;
         std::vector<int> node_ids;
-        for (const auto &joint : goal->joints)
+        for (const auto &joint : goal->joints.joints)
         {
           for (auto & node : interim_copy.nodes) {
             if (node.parameters[0].name == joint) {
@@ -227,7 +227,6 @@ namespace jigless_planner
         }
       }
     }
-
   };
 
   CallbackReturnT BottomControllerNode::on_deactivate(const rclcpp_lifecycle::State & previous_state)
@@ -283,20 +282,17 @@ namespace jigless_planner
     return CallbackReturnT::SUCCESS;
   }
 
-  std::vector<std::string> BottomControllerNode::get_unfinished_action_args(
+  jigless_planner_interfaces::msg::JointStatus BottomControllerNode::get_unfinished_action_args(
     const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result, 
     const std::string & action_name)
   {
-    std::list<std::string> unfinished_joints_list;
+    jigless_planner_interfaces::msg::JointStatus unfinished_joints;
     for (const auto & action : result) {
-      if (action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED || action.action != action_name)
+      if (action.action != action_name)
         continue;
-      unfinished_joints_list.insert(unfinished_joints_list.end(), action.arguments.begin(), action.arguments.end());
+      unfinished_joints.joints.insert(unfinished_joints.joints.end(), action.arguments.begin(), action.arguments.end());
+      unfinished_joints.status.emplace_back(true ? action.status != plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED : false);
     }
-    std::vector<std::string> unfinished_joints{std::make_move_iterator(unfinished_joints_list.begin()),
-      std::make_move_iterator(unfinished_joints_list.end())};
-    // unfinished_joints.reserve(unfinished_joints_list.size());
-    // std::copy(unfinished_joints_list.begin(), unfinished_joints_list.end(), std::back_inserter(unfinished_joints));
     return unfinished_joints;
   }
 }

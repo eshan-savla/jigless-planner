@@ -31,6 +31,8 @@
 #include <plansys2_pddl_parser/Utils.h>
 
 #include "jigless_planner_interfaces/action/run_bottom.hpp"
+#include "jigless_planner_interfaces/msg/joint_status.hpp"
+
 
 
 namespace jigless_planner
@@ -60,7 +62,7 @@ namespace jigless_planner
     void init();
     bool init_knowledge();
     bool response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future);
-    std::vector<std::string> get_unfinished_action_args(
+    jigless_planner_interfaces::msg::JointStatus get_unfinished_action_args(
       const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result,
       const std::string & action_name = "weld");
 
