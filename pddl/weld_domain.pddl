@@ -21,7 +21,6 @@
             (not_welded ?j)
             (seam_measured ?j)
             (joint_orientation ?j)
-            (forall (?j2 - joint) (imply (depends_on ?j ?j2) (welded ?j2)))
           ))
         )
     :effect (and 
@@ -42,6 +41,7 @@
           (over all (and
               (not_welded ?j)
               (joint_orientation ?j)
+              (forall (?j2 - joint) (imply (depends_on ?j ?j2) (welded ?j2)))
           ))
       )
       :effect (and 

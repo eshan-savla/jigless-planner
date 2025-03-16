@@ -24,11 +24,17 @@
           )
       
     :effect (and
-        (at start (not (joint_orientation ?from)))
+        (at start (and
+          (not (joint_orientation ?from))
+          ; (not_seam_measured ?from)
+          ; (not (seam_measured ?from))
+        ))
 
-        (at end (joint_orientation ?to))
-    )
-  ) 
+        (at end (and
+          (joint_orientation ?to)
+        ))
+    ) 
+  )
 
   (:durative-action weld
     :parameters (?j - joint)
@@ -37,10 +43,9 @@
             (not_welded ?j)
             (seam_measured ?j)
             (joint_orientation ?j)
-            (forall (?j2 - joint) (imply (depends_on ?j ?j2) (welded ?j2)))
           ))
         )
-    :effect (and 
+    :effect (and
           (at end (and 
                 (welded ?j)
                 (not (not_welded ?j))
@@ -58,6 +63,7 @@
           (over all (and
               (not_welded ?j)
               (joint_orientation ?j)
+              (forall (?j2 - joint) (imply (depends_on ?j ?j2) (welded ?j2)))
           ))
       )
       :effect (and 
