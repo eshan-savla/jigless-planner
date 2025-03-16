@@ -58,13 +58,13 @@ include_directories(include)
 add_executable(execute_bottom_node src/ExecuteBottom.cpp)
 ament_target_dependencies(execute_bottom_node ${dependencies} rclcpp_components jigless_planner_interfaces)
 
-add_library(jigless_planner_transit_bt_node SHARED src/behavior_tree_nodes/Transit.cpp)
+add_library(jigless_planner_transit_bt_node SHARED src/behavior_tree_nodes/bottom_nodes/Transit.cpp)
 list(APPEND plugin_libs jigless_planner_transit_bt_node)
 
-add_library(jigless_planner_weld_bt_node SHARED src/behavior_tree_nodes/Weld.cpp)
+add_library(jigless_planner_weld_bt_node SHARED src/behavior_tree_nodes/bottom_nodes/Weld.cpp)
 list(APPEND plugin_libs jigless_planner_weld_bt_node)
 
-add_library(jigless_planner_validate_bt_node SHARED src/behavior_tree_nodes/Validate.cpp)
+add_library(jigless_planner_validate_bt_node SHARED src/behavior_tree_nodes/bottom_nodes/Validate.cpp)
 list(APPEND plugin_libs jigless_planner_validate_bt_node)
 
 foreach(bt_plugin ${plugin_libs})
