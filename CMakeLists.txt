@@ -67,6 +67,15 @@ list(APPEND plugin_libs jigless_planner_weld_bt_node)
 add_library(jigless_planner_validate_bt_node SHARED src/behavior_tree_nodes/bottom_nodes/Validate.cpp)
 list(APPEND plugin_libs jigless_planner_validate_bt_node)
 
+add_library(jigless_planner_command_bt_node SHARED src/behavior_tree_nodes/top_nodes/Command.cpp)
+list(APPEND plugin_libs jigless_planner_command_bt_node)
+
+add_library(jigless_planner_moverobot_bt_node SHARED src/behavior_tree_nodes/top_nodes/MoveRobot.cpp)
+list(APPEND plugin_libs jigless_planner_moverobot_bt_node)
+
+add_library(jigless_planner_setstatus_bt_node SHARED src/behavior_tree_nodes/top_nodes/SetStatus.cpp)
+list(APPEND plugin_libs jigless_planner_setstatus_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
@@ -85,6 +94,9 @@ install(TARGETS
   jigless_planner_transit_bt_node
   jigless_planner_weld_bt_node
   jigless_planner_validate_bt_node
+  jigless_planner_command_bt_node
+  jigless_planner_moverobot_bt_node
+  jigless_planner_setstatus_bt_node
   bottom_controller_node
   top_controller_node
   execute_bottom_node

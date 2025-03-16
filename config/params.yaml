@@ -10,3 +10,15 @@ validate:
   ros__parameters:
     plugins:
       - jigless_planner_validate_bt_node
+command:
+  ros__parameters:
+    plugins:
+      - jigless_planner_command_bt_node
+moverobot:
+  ros__parameters:
+    plugins:
+      - jigless_planner_moverobot_bt_node
+setstatus:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
