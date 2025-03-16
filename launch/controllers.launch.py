@@ -26,28 +26,26 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Get the launch directory
     example_dir = get_package_share_directory('jigless-planner')
-    namespace = LaunchConfiguration('namespace')
-
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
-        description='Namespace')
-
     
-    bottom_controller = Node(
-        package='jigless-planner',
-        executable='bottom_controller_node',
-        name='validate',
-        namespace=namespace,
-        output='screen',
-        parameters=[]
+    # bottom_controller = Node(
+    #     package='jigless-planner',
+    #     executable='bottom_controller_node',
+    #     name='validate',
+    #     namespace='bottom_planner',
+    #     output='screen',
+    #     parameters=[]
+    # )
+    top_controller = Node(
+    package='jigless-planner',
+    executable='top_controller_node',
+    name='top_controller',
+    namespace='top_planner',
+    output='screen',
+    parameters=[]
     )
-    
  # Create the launch description and populate
     ld = LaunchDescription()
 
-    ld.add_action(declare_namespace_cmd)
-
     # Declare the launch options
-    ld.add_action(bottom_controller)
+    ld.add_action(top_controller)
     return ld

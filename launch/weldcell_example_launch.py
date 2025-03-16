@@ -26,31 +26,50 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Get the launch directory
     example_dir = get_package_share_directory('jigless-planner')
-    namespace = LaunchConfiguration('namespace')
+    bottom_ns = LaunchConfiguration('bottom_ns')
+    top_ns = LaunchConfiguration('top_ns')
 
-    declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace',
-        default_value='',
+    # Declare namespaces
+    declare_bottom_ns_cmd = DeclareLaunchArgument(
+        'bottom_ns',
+        default_value='bottom_planner',
+        description='Namespace')
+    
+    declare_top_ns_cmd = DeclareLaunchArgument(
+        'top_ns',
+        default_value='top_planner',
         description='Namespace')
 
-    plansys2_cmd = IncludeLaunchDescription(
+    # Specify launch bringups
+    plansys2_bottom = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('plansys2_bringup'),
             'launch',
-            'plansys2_bringup_launch_distributed.py')),
+            'plansys2_bringup_launch_monolithic.py')),
         launch_arguments={
           'model_file': 
                     example_dir + '/pddl/transit_domain.pddl:' + 
                     example_dir + '/pddl/weld_domain.pddl',
-          'namespace': namespace
+          'namespace': bottom_ns
+          }.items())
+    
+    plansys2_top = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(
+            get_package_share_directory('plansys2_bringup'),
+            'launch',
+            'plansys2_bringup_launch_monolithic.py')),
+        launch_arguments={
+          'model_file':  
+                    example_dir + '/pddl/top_domain.pddl',
+          'namespace': top_ns
           }.items())
 
-    # Specify the actions
+    # Specify the bottom actions
     transit_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
         name='transit',
-        namespace=namespace,
+        namespace=bottom_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
@@ -64,7 +83,7 @@ def generate_launch_description():
         package='plansys2_bt_actions',
         executable='bt_action_node',
         name='weld',
-        namespace=namespace,
+        namespace=bottom_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
@@ -78,7 +97,7 @@ def generate_launch_description():
         package='plansys2_bt_actions',
         executable='bt_action_node',
         name='validate',
-        namespace=namespace,
+        namespace=bottom_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
@@ -87,42 +106,94 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/validate.xml'
             }
         ])
-
-    # transit_cmd = Node(
-    #     package='jigless-planner',
-    #     executable='transit_action_node',
-    #     name='transit',
-    #     namespace=namespace,
-    #     output='screen',
-    #     parameters=[]
-    # )    
-
-    # weld_cmd = Node(
-    #     package='jigless-planner',
-    #     executable='weld_action_node',
-    #     name='weld',
-    #     namespace=namespace,
-    #     output='screen',
-    #     parameters=[]
-    # )
-    # validate_cmd = Node(
-    #     package='jigless-planner',
-    #     executable='validate_action_node',
-    #     name='validate',
-    #     namespace=namespace,
-    #     output='screen',
-    #     parameters=[]
-    # )
     
+    bottom_controller = Node(
+        package='jigless-planner',
+        executable='bottom_controller_node',
+        name='bottom_controller',
+        namespace=bottom_ns,
+        output='screen',
+        parameters=[]
+    )   
+    
+    # Specify the top actions
+
+    command_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='command',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'command',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
+            }
+        ])
+    
+    moverobot_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='moverobot',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'moverobot',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/moverobot.xml'
+            }
+        ])
+    
+    setstatus_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='setstatus',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'setstatus',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+            }
+        ])
+    
+    execute_bottom_cmd = Node(
+        package='jigless-planner',
+        executable='execute_bottom_node',
+        name='execute_bottom',
+        namespace=top_ns,
+        output='screen',
+        parameters=[]
+    )
+
+    top_controller = Node(
+        package='jigless-planner',
+        executable='top_controller_node',
+        name='top_controller',
+        namespace=top_ns,
+        output='screen',
+        parameters=[]
+    )
  # Create the launch description and populate
     ld = LaunchDescription()
 
-    ld.add_action(declare_namespace_cmd)
+    ld.add_action(declare_bottom_ns_cmd)
+    ld.add_action(declare_top_ns_cmd)
 
     # Declare the launch options
-    ld.add_action(plansys2_cmd)
+    ld.add_action(plansys2_bottom)
+    ld.add_action(plansys2_top)
+    ld.add_action(bottom_controller)
+    ld.add_action(top_controller)
 
     ld.add_action(transit_cmd)
     ld.add_action(weld_cmd)
     ld.add_action(validate_cmd)
+    ld.add_action(command_cmd)
+    ld.add_action(moverobot_cmd)
+    ld.add_action(setstatus_cmd)
+    ld.add_action(execute_bottom_cmd)
     return ld
