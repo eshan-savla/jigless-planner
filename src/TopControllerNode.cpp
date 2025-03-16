@@ -206,9 +206,9 @@ namespace jigless_planner
         if (!goal_joints.empty()){
           set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
           std::stringstream goal_ss;
-          goal_ss << "(:goal (and ";
+          goal_ss << "(:goal (and";
           for (const auto &joint : goal_joints) {
-            goal_ss << "(welded "<< joint << ") ";
+            goal_ss << " (welded "<< joint << ")";
           }
           goal_ss << "))";
           RCLCPP_INFO(this->get_logger(), "Received goal request");
@@ -321,7 +321,9 @@ int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
   auto node = std::make_shared<jigless_planner::TopControllerNode>("top_controller_node");
-  rclcpp::spin(node->get_node_base_interface());
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node->get_node_base_interface());
+  executor.spin();
   rclcpp::shutdown();
   return 0;
 }
