@@ -1,0 +1,31 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ROS: Launch",
+            "request": "launch",
+            "target": "${workspaceFolder}/launch/${input:targetFile}",
+            "launch": [
+                "rviz",
+                "gz",
+                "gzclient",
+                "gzserver"
+            ],
+            "type": "ros"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "targetFile",
+            "type": "pickString",
+            "description": "Select the path to the launch file",
+            "options": [
+                "weldcell_example_launch.py",
+                "controllers.launch.py"
+            ]
+        }
+    ]
+}
