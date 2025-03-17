@@ -127,7 +127,7 @@ def generate_launch_description():
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'command_joint',
+                'action_name': 'command',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -141,7 +141,7 @@ def generate_launch_description():
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'command_joint',
+                'action_name': 'command',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -155,7 +155,7 @@ def generate_launch_description():
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'command_joint',
+                'action_name': 'command',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])

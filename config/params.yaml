@@ -30,20 +30,20 @@ set_status_1:
   ros__parameters:
     plugins:
       - jigless_planner_setstatus_bt_node
-set_status_2:
-  ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
-set_status_3:
-  ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
-set_status_4:
-  ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
-set_status_5:
-  ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
+# set_status_2:
+#   ros__parameters:
+#     plugins:
+#       - jigless_planner_setstatus_bt_node
+# set_status_3:
+#   ros__parameters:
+#     plugins:
+#       - jigless_planner_setstatus_bt_node
+# set_status_4:
+#   ros__parameters:
+#     plugins:
+#       - jigless_planner_setstatus_bt_node
+# set_status_5:
+#   ros__parameters:
+#     plugins:
+#       - jigless_planner_setstatus_bt_node
 
