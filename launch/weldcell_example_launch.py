@@ -118,16 +118,44 @@ def generate_launch_description():
     
     # Specify the top actions
 
-    command_cmd = Node(
+    command_1_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='command',
+        name='command_joint_1',
         namespace=top_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'command',
+                'action_name': 'command_joint',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
+            }
+        ])
+    
+    command_2_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='command_joint_2',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'command_joint',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
+            }
+        ])
+    
+    command_3_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='command_joint_3',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'command_joint',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -135,31 +163,86 @@ def generate_launch_description():
     moverobot_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='moverobot',
+        name='move_robot',
         namespace=top_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'moverobot',
+                'action_name': 'move_robot',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/moverobot.xml'
             }
         ])
     
-    setstatus_cmd = Node(
+    set_status_1_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='setstatus',
+        name='set_status_1',
         namespace=top_ns,
         output='screen',
         parameters=[
             example_dir + '/config/params.yaml',
             {
-                'action_name': 'setstatus',
+                'action_name': 'set_status',
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
     
+    set_status_2_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_status_2',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'set_status',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+            }
+        ])
+    
+    set_status_3_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_status_3',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'set_status',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+            }
+        ])
+    
+    set_status_4_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_status_4',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'set_status',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+            }
+        ])
+    
+    set_status_5_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_status_5',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/params.yaml',
+            {
+                'action_name': 'set_status',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+            }
+        ])
     execute_bottom_cmd = Node(
         package='jigless-planner',
         executable='execute_bottom_node',
@@ -192,8 +275,14 @@ def generate_launch_description():
     ld.add_action(transit_cmd)
     ld.add_action(weld_cmd)
     ld.add_action(validate_cmd)
-    ld.add_action(command_cmd)
+    ld.add_action(command_1_cmd)
+    ld.add_action(command_2_cmd)
+    ld.add_action(command_3_cmd)
     ld.add_action(moverobot_cmd)
-    ld.add_action(setstatus_cmd)
+    ld.add_action(set_status_1_cmd)
+    ld.add_action(set_status_2_cmd)
+    ld.add_action(set_status_3_cmd)
+    ld.add_action(set_status_4_cmd)
+    ld.add_action(set_status_5_cmd)
     ld.add_action(execute_bottom_cmd)
     return ld
