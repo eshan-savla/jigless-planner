@@ -122,7 +122,7 @@ def generate_launch_description():
     command_1_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='command_joint_1',
+        name='command_1',
         namespace=top_ns,
         output='screen',
         parameters=[
@@ -138,7 +138,7 @@ def generate_launch_description():
     command_2_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='command_joint_2',
+        name='command_2',
         namespace=top_ns,
         output='screen',
         parameters=[
@@ -154,7 +154,7 @@ def generate_launch_description():
     command_3_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
-        name='command_joint_3',
+        name='command_3',
         namespace=top_ns,
         output='screen',
         parameters=[
@@ -263,7 +263,7 @@ def generate_launch_description():
     execute_bottom_cmd = Node(
         package='jigless-planner',
         executable='execute_bottom_node',
-        name='execute_bottom',
+        name='execute_1',
         namespace=top_ns,
         output='screen',
         parameters=[]

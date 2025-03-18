@@ -22,7 +22,7 @@
   ; Updating of welding commands by addition or ommission of joints is to be handled by a seperate thread and not part of the planning problem.
 
   
-  (:durative-action command_joint
+  (:durative-action command
       :parameters (?j - joint ?p - position)
       :duration (= ?duration 1)
       :condition (and 
@@ -45,7 +45,7 @@
   ;; This durative action models an external call to the bottom planner
   ;; to weld a single joint. It requires that the joint is reachable,
   ;; commanded, and not yet welded. 
-  (:durative-action execute-bottom
+  (:durative-action execute
     :parameters (?p - position)
     :duration (= ?duration 20)
     :condition (and 
@@ -82,7 +82,7 @@
   )
   
   ;; This durative action moves the welding robot from one position to another.
-  (:durative-action move-robot
+  (:durative-action move_robot
     :parameters (?from ?to - position)
     :duration (= ?duration 5)
     :condition (and (at start (at ?from)))
