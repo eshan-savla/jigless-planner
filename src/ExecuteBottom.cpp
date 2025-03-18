@@ -3,13 +3,9 @@
 
 using namespace std::chrono_literals;
 
-ExecuteBottom::ExecuteBottom() : plansys2::ActionExecutorClient("run_bottom", 100ms) {}
-
-rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  ExecuteBottom::on_configure(const rclcpp_lifecycle::State & previous_state)
+ExecuteBottom::ExecuteBottom() : plansys2::ActionExecutorClient("execute", 100ms)
 {
-  RCLCPP_INFO(this->get_logger(), "Configuring bottom executor action");
-  LifecycleNode::on_configure(previous_state);
+  RCLCPP_INFO(this->get_logger(), "Initializing bottom executor action");
   action_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   publisher_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(10));
@@ -17,7 +13,6 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   joint_status_publisher_ = this->create_publisher<jigless_planner_interfaces::msg::JointStatus>(
     "failed_joints", qos_setting);
   problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
-  return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 void ExecuteBottom::do_work() {}
@@ -110,6 +105,7 @@ int main(int argc, char **argv)
   rclcpp::init(argc, argv);
   auto node = std::make_shared<ExecuteBottom>();
   rclcpp::executors::MultiThreadedExecutor executor;
+  node->set_parameter(rclcpp::Parameter("action_name", "execute"));
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
   executor.add_node(node->get_node_base_interface());
   executor.spin();

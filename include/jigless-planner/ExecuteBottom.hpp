@@ -45,8 +45,6 @@ class ExecuteBottom : public plansys2::ActionExecutorClient
     void resultCallback(const GoalHandleRunBottom::WrappedResult & result);
     void do_work() override;
     // void responseCallback(std::shared_future<GoalHandleRunBottom::SharedPtr> future);
-    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
-      const rclcpp_lifecycle::State & previous_state) override;
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
       const rclcpp_lifecycle::State & previous_state) override;
 };
