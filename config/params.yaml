@@ -1,49 +1,48 @@
-transit:
+bottom_planner/transit:
   ros__parameters:
     plugins:
       - jigless_planner_transit_bt_node
-weld:
+bottom_planner/weld:
   ros__parameters:
     plugins:
       - jigless_planner_weld_bt_node
-validate:
+bottom_planner/validate:
   ros__parameters:
     plugins:
       - jigless_planner_validate_bt_node
-command_joint_1:
+top_planner/command_1:
   ros__parameters:
     plugins:
       - jigless_planner_command_bt_node
-command_joint_2:
+top_planner/command_2:
   ros__parameters:
     plugins:
       - jigless_planner_command_bt_node
-command_joint_3:
+top_planner/command_3:
   ros__parameters:
     plugins:
       - jigless_planner_command_bt_node
-moverobot:
+top_planner/move_robot:
   ros__parameters:
     plugins:
       - jigless_planner_moverobot_bt_node
-set_status_1:
+top_planner/set_status_1:
   ros__parameters:
     plugins:
       - jigless_planner_setstatus_bt_node
-# set_status_2:
-#   ros__parameters:
-#     plugins:
-#       - jigless_planner_setstatus_bt_node
-# set_status_3:
-#   ros__parameters:
-#     plugins:
-#       - jigless_planner_setstatus_bt_node
-# set_status_4:
-#   ros__parameters:
-#     plugins:
-#       - jigless_planner_setstatus_bt_node
-# set_status_5:
-#   ros__parameters:
-#     plugins:
-#       - jigless_planner_setstatus_bt_node
-
+top_planner/set_status_2:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+top_planner/set_status_3:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+top_planner/set_status_4:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+top_planner/set_status_5:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
