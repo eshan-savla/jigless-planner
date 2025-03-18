@@ -111,7 +111,7 @@ def generate_launch_description():
     bottom_controller = Node(
         package='jigless-planner',
         executable='bottom_controller_node',
-        name='bottom_controller',
+        name=bottom_name,
         namespace=bottom_ns,
         output='screen',
         parameters=[]
@@ -129,6 +129,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'command',
+                'publisher_port': 1668,
+                'server_port': 1669,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -159,6 +161,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'command',
+                'publisher_port': 1672,
+                'server_port': 1673,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -187,6 +191,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'set_status',
+                'publisher_port': 1674,
+                'server_port': 1675,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -201,6 +207,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'set_status',
+                'publisher_port': 1676,
+                'server_port': 1677,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -215,6 +223,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'set_status',
+                'publisher_port': 1678,
+                'server_port': 1679,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -229,6 +239,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'set_status',
+                'publisher_port': 1680,
+                'server_port': 1681,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -243,6 +255,8 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'set_status',
+                'publisher_port': 1682,
+                'server_port': 1683,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
