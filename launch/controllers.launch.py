@@ -30,7 +30,7 @@ def generate_launch_description():
     # bottom_controller = Node(
     #     package='jigless-planner',
     #     executable='bottom_controller_node',
-    #     name='validate',
+    #     name='bottom_controller',
     #     namespace='bottom_planner',
     #     output='screen',
     #     parameters=[]
@@ -41,7 +41,12 @@ def generate_launch_description():
     name='top_controller',
     namespace='top_planner',
     output='screen',
-    parameters=[]
+        parameters=[
+            {
+                'bottom_ns': 'bottom_planner',
+                'bottom_controller_name': 'bottom_controller',
+            }
+        ]
     )
  # Create the launch description and populate
     ld = LaunchDescription()

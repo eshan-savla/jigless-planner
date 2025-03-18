@@ -38,10 +38,16 @@ namespace jigless_planner
     executor_client_ = std::make_shared<plansys2::ExecutorClient>();
     add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>(
       "problem_expert/add_problem");
+    this->declare_parameter("bottom_ns", rclcpp::PARAMETER_STRING);
+    this->declare_parameter("bottom_controller_name", rclcpp::PARAMETER_STRING);
+    std::string bottom_namespace = this->get_parameter("bottom_ns").as_string();
+    std::string bottom_controller_node = this->get_parameter("bottom_controller_name").as_string();
     change_state_client_ = this->create_client<lifecycle_msgs::srv::ChangeState>(
-      "bottom_controller_node/change_state", rmw_qos_profile_services_default, lifecycle_group);
+      "/" + bottom_namespace + "/" + bottom_controller_node + "/change_state",
+      rmw_qos_profile_services_default, lifecycle_group);
     get_state_client_ = this->create_client<lifecycle_msgs::srv::GetState>(
-      "bottom_controller_node/get_state", rmw_qos_profile_services_default, lifecycle_group);
+      "/" + bottom_namespace + "/" + bottom_controller_node + "/get_state",
+      rmw_qos_profile_services_default, lifecycle_group);
     auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(10));
     qos_setting.reliable();
     auto subscriber_opt = rclcpp::SubscriptionOptions();
@@ -241,6 +247,15 @@ namespace jigless_planner
         // Perform actions for the RUNNING state
         if (executor_client_->execute_and_check_plan()) {
           auto plan_result = executor_client_->getResult();
+          if (!plan_result.has_value()) {
+            RCLCPP_ERROR(this->get_logger(), "Plan finished with error");
+            RCLCPP_WARN(this->get_logger(), "Clearing and waiting for new goal");
+            problem_expert_->clearGoal();
+            goal_joints.clear();
+            set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+            state_ = READY;
+            break;
+          }
           if (plan_result.value().success) {
             RCLCPP_INFO(this->get_logger(), "Plan successfully finished");
           } else {

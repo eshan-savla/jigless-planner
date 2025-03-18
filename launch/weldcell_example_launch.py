@@ -28,13 +28,14 @@ def generate_launch_description():
     example_dir = get_package_share_directory('jigless-planner')
     bottom_ns = LaunchConfiguration('bottom_ns')
     top_ns = LaunchConfiguration('top_ns')
+    bottom_name = "bottom_controller"
 
     # Declare namespaces
     declare_bottom_ns_cmd = DeclareLaunchArgument(
         'bottom_ns',
         default_value='bottom_planner',
         description='Namespace')
-    
+
     declare_top_ns_cmd = DeclareLaunchArgument(
         'top_ns',
         default_value='top_planner',
@@ -47,19 +48,19 @@ def generate_launch_description():
             'launch',
             'plansys2_bringup_launch_monolithic.py')),
         launch_arguments={
-          'model_file': 
-                    example_dir + '/pddl/transit_domain.pddl:' + 
+          'model_file':
+                    example_dir + '/pddl/transit_domain.pddl:' +
                     example_dir + '/pddl/weld_domain.pddl',
           'namespace': bottom_ns
           }.items())
-    
+
     plansys2_top = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
             get_package_share_directory('plansys2_bringup'),
             'launch',
             'plansys2_bringup_launch_monolithic.py')),
         launch_arguments={
-          'model_file':  
+          'model_file':
                     example_dir + '/pddl/top_domain.pddl',
           'namespace': top_ns
           }.items())
@@ -92,7 +93,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/weld.xml'
             }
         ])
-    
+
     validate_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -106,7 +107,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/validate.xml'
             }
         ])
-    
+
     bottom_controller = Node(
         package='jigless-planner',
         executable='bottom_controller_node',
@@ -114,8 +115,8 @@ def generate_launch_description():
         namespace=bottom_ns,
         output='screen',
         parameters=[]
-    )   
-    
+    )
+
     # Specify the top actions
 
     command_1_cmd = Node(
@@ -131,7 +132,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
-    
+
     command_2_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -142,10 +143,12 @@ def generate_launch_description():
             example_dir + '/config/params.yaml',
             {
                 'action_name': 'command',
+                'publisher_port': 1670,
+                'server_port': 1671,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
-    
+
     command_3_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -159,7 +162,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
-    
+
     moverobot_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -173,7 +176,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/moverobot.xml'
             }
         ])
-    
+
     set_status_1_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -187,7 +190,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
-    
+
     set_status_2_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -201,7 +204,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
-    
+
     set_status_3_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -215,7 +218,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
-    
+
     set_status_4_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -229,7 +232,7 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
-    
+
     set_status_5_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -258,7 +261,12 @@ def generate_launch_description():
         name='top_controller',
         namespace=top_ns,
         output='screen',
-        parameters=[]
+        parameters=[
+            {
+                'bottom_ns': bottom_ns,
+                'bottom_controller_name': bottom_name,
+            }
+        ]
     )
  # Create the launch description and populate
     ld = LaunchDescription()
