@@ -33,13 +33,13 @@ namespace jigless_planner
       std::bind(&BottomControllerNode::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&BottomControllerNode::handle_cancel, this, std::placeholders::_1),
       std::bind(&BottomControllerNode::handle_accepted, this, std::placeholders::_1));
-    this->declare_parameter("problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
+    this->declare_parameter("bottom_problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
     add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("problem_expert/add_problem");
   };
 
   bool BottomControllerNode::init_knowledge()
   {
-    std::string problem_file_path = this->get_parameter("problem_file_path").as_string();
+    std::string problem_file_path = this->get_parameter("bottom_problem_file_path").as_string();
     std::ifstream problem_file(problem_file_path);
     if (!problem_file.is_open()) {
       RCLCPP_ERROR(this->get_logger(), "Failed to open problem file: %s", problem_file_path.c_str());
@@ -58,12 +58,7 @@ namespace jigless_planner
       }
       RCLCPP_INFO(this->get_logger(), "service not available, waiting again...");
     }
-    auto result = add_problem_client_->async_send_request(request, std::bind(&BottomControllerNode::response_callback, this, std::placeholders::_1));
-    return true;
-  };
-
-  bool BottomControllerNode::response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future)
-  {
+    auto future = add_problem_client_->async_send_request(request).future.share();
     using namespace std::literals::chrono_literals;
     auto status = future.wait_for(1s);
     if (status == std::future_status::ready) {
@@ -76,6 +71,10 @@ namespace jigless_planner
     return result->success;
     }
     return false;
+  };
+
+  bool BottomControllerNode::response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future)
+  {
   };
 
   CallbackReturnT BottomControllerNode::on_activate(const rclcpp_lifecycle::State & previous_state)

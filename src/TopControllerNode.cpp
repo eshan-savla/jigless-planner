@@ -4,7 +4,8 @@
 namespace jigless_planner
 {
 
-  TopControllerNode::TopControllerNode(const std::string &node_name) : rclcpp::Node(node_name), state_(STARTING)
+  TopControllerNode::TopControllerNode(const std::string &node_name) : rclcpp::Node(node_name),
+    state_(STARTING), step_duration_(std::chrono::milliseconds(100))
   {
     init();
   }
@@ -58,15 +59,15 @@ namespace jigless_planner
     interact_top_service_ = this->create_service<jigless_planner_interfaces::srv::InteractTop>("interact_top",
       std::bind(&TopControllerNode::topServiceCallback, this, std::placeholders::_1,
         std::placeholders::_2), rmw_qos_profile_services_default, interactor_group);
-    this->declare_parameter("problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/top_welding_problem.pddl");
+    this->declare_parameter("top_problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/top_welding_problem.pddl");
     step_timer_ = this->create_wall_timer(
-      std::chrono::milliseconds(100), std::bind(&TopControllerNode::step, this), executor_group);
+      std::chrono::milliseconds(step_duration_), std::bind(&TopControllerNode::step, this), executor_group);
   }
 
   bool TopControllerNode::initKnowledge()
   {
     using namespace std::literals::chrono_literals;
-    std::string problem_file_path = this->get_parameter("problem_file_path").as_string();
+    std::string problem_file_path = this->get_parameter("top_problem_file_path").as_string();
     std::ifstream problem_file(problem_file_path);
     if (!problem_file.is_open()) {
       RCLCPP_ERROR(this->get_logger(), "Failed to open problem file: %s", problem_file_path.c_str());
@@ -99,6 +100,14 @@ namespace jigless_planner
     } 
     return false;
   };
+
+  void TopControllerNode::resetTimer(std::chrono::milliseconds duration)
+  {
+    step_duration_ = duration;
+    step_timer_->cancel();
+    step_timer_ = this->create_wall_timer(
+      step_duration_, std::bind(&TopControllerNode::step, this), executor_group);
+  }
 
   void TopControllerNode::jointCallback(const jigless_planner_interfaces::msg::JointStatus &msg)
   {
@@ -162,25 +171,26 @@ namespace jigless_planner
     return lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
   }
 
-  void TopControllerNode::set_state(unsigned int state) {
+  bool TopControllerNode::set_state(unsigned int state) {
     using namespace std::literals::chrono_literals;
     auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
     request->transition.id = state;
     if (!change_state_client_->wait_for_service(3s)) {
       RCLCPP_ERROR(this->get_logger(), "Service %s not available", change_state_client_->get_service_name());
-      return;
+      return false;
     }
     auto future_result = change_state_client_->async_send_request(request).future.share();
     auto status = future_result.wait_for(3s);
     if (status != std::future_status::ready) {
       RCLCPP_ERROR(this->get_logger(), "Server timeout while setting state for bottom controller node");
-      return;
+      return false;
     }
     if (future_result.get()->success) {
       RCLCPP_INFO(this->get_logger(), "State changed successfully");
     } else {
       RCLCPP_ERROR(this->get_logger(), "Failed to change state for bottom controller node");
     }
+    return future_result.get()->success;
   }
 
   std::unique_ptr<std::vector<plansys2_msgs::msg::ActionExecutionInfo>> TopControllerNode::get_executing_actions(
@@ -201,7 +211,13 @@ namespace jigless_planner
     switch (state_) {
       case STARTING: {
         if (initKnowledge()) {
-          set_state(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+          if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE)){
+            resetTimer(std::chrono::milliseconds(5000));
+            break;
+          }
+          if (step_duration_ > std::chrono::milliseconds(100)) {
+            resetTimer(std::chrono::milliseconds(100));
+          }
           state_ = READY;
           RCLCPP_INFO(this->get_logger(), "Top controller node configured and ready");
         }
@@ -210,7 +226,13 @@ namespace jigless_planner
       case READY: {
       // Perform actions for the READY state
         if (!goal_joints.empty()){
-          set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+          if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE)){
+            resetTimer(std::chrono::milliseconds(1000));
+            break;
+          }
+          if (step_duration_ > std::chrono::milliseconds(100)) {
+            resetTimer(std::chrono::milliseconds(100));
+          }
           std::stringstream goal_ss;
           goal_ss << "(:goal (and";
           for (const auto &joint : goal_joints) {

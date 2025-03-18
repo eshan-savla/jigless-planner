@@ -68,9 +68,11 @@ namespace jigless_planner
     rclcpp::Subscription<jigless_planner_interfaces::msg::JointStatus>::SharedPtr joint_status_subscriber_;
     rclcpp::Service<jigless_planner_interfaces::srv::InteractTop>::SharedPtr interact_top_service_;
     rclcpp::TimerBase::SharedPtr step_timer_;
+    std::chrono::milliseconds step_duration_;
 
     void init();
     bool initKnowledge();
+    void resetTimer(std::chrono::milliseconds duration);
     std::unique_ptr<std::vector<plansys2_msgs::msg::ActionExecutionInfo>> get_executing_actions(
       const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &feedback);
     void jointCallback(const jigless_planner_interfaces::msg::JointStatus & msg);
@@ -83,7 +85,7 @@ namespace jigless_planner
     // void set_state_callback(rclcpp::Client<lifecycle_msgs::srv::ChangeState>::SharedFuture future);
 
     unsigned int get_state();
-    void set_state(unsigned int state);
+    bool set_state(unsigned int state);
   };
 }
 
