@@ -40,13 +40,13 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   std::string topic = "/" + bottom_ns + "/run_bottom";
   RCLCPP_INFO(this->get_logger(), "Topic name: %s", topic.c_str());
   action_client_ = rclcpp_action::create_client<RunBottom>(
-    shared_from_this(), "/" + bottom_ns + "/run_bottom");
+    shared_from_this(), topic);
   bool bottom_controller_ready = false;
   do
   {
     RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Waiting for action server...");
     bottom_controller_ready = action_client_->wait_for_action_server(std::chrono::seconds(5));
-  } while (bottom_controller_ready);
+  } while (!bottom_controller_ready);
   RCLCPP_INFO(this->get_logger(), "Bottom controller action server ready");
   jigless_planner_interfaces::action::RunBottom::Goal goal;
   goal.joints.joints = std::move(getCommandedJoints());
@@ -156,7 +156,9 @@ int main(int argc, char **argv)
   auto node = std::make_shared<ExecuteBottom>();
   node->set_parameter(rclcpp::Parameter("action_name", "execute"));
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
-  rclcpp::spin(node->get_node_base_interface());
+  rclcpp::executors::MultiThreadedExecutor executor;
+  executor.add_node(node->get_node_base_interface());
+  executor.spin();
   rclcpp::shutdown();
   return 0;
 }
