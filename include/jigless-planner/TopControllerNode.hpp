@@ -36,17 +36,19 @@ namespace jigless_planner
     ~TopControllerNode();
 
   private:
-    bool goal_changed_ = false, pause_ = false;
+    bool goal_changed_ = false, pause_ = false, cancel_ = false;
     std::vector<std::string> goal_joints;
     std::map<std::string, bool> failed_joints;
     std::mutex failed_joints_mutex_;
+    std::mutex interaction_mutex_;
     typedef enum
     {
       STARTING,
       READY,
       RUNNING,
       PAUSED,
-      STOPPED
+      STOPPED,
+      CANCELLED
     } StateType;
     StateType state_;
     

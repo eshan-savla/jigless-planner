@@ -143,6 +143,10 @@ namespace jigless_planner
       }
       break;
     }
+    case jigless_planner_interfaces::srv::InteractTop::Request::STOP: {
+      std::lock_guard<std::mutex> lock(interaction_mutex_);
+      cancel_ = true;
+    }
     default:
       break;
     }
@@ -225,6 +229,8 @@ namespace jigless_planner
       }
       case READY: {
       // Perform actions for the READY state
+        if (cancel_)
+          cancel_ = false;
         if (!goal_joints.empty()){
           if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE)){
             resetTimer(std::chrono::milliseconds(1000));
@@ -300,7 +306,12 @@ namespace jigless_planner
         if (goal_changed_) {
           RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
           executor_client_->cancel_plan_execution();
-          state_ = STOPPED; 
+          state_ = STOPPED;
+          break;
+        }
+        if (cancel_) {
+          RCLCPP_INFO(this->get_logger(), "Stopping execution");
+          state_ = CANCELLED;
           break;
         }
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Running plan execution");
@@ -350,6 +361,21 @@ namespace jigless_planner
         problem_expert_->clearGoal();
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
+        break;
+      }
+      case CANCELLED: {
+        // Perform actions for the CANCELLED state
+        RCLCPP_INFO(this->get_logger(), "Cancelling plan execution");
+        executor_client_->cancel_plan_execution();
+        RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
+        set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+        RCLCPP_INFO(this->get_logger(), "Clearing goal");
+        problem_expert_->clearGoal();
+        goal_joints.clear();
+        RCLCPP_INFO(this->get_logger(), "Switching to READY state");
+        state_ = READY;
+        std::unique_lock<std::mutex> lock(interaction_mutex_);
+        lock.unlock();
         break;
       }
     }
