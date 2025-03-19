@@ -5,7 +5,11 @@ namespace jigless_planner
 {
   BottomControllerNode::BottomControllerNode(const std::string &node_name, bool intra_process_comms) :
     rclcpp_lifecycle::LifecycleNode(node_name, rclcpp::NodeOptions().use_intra_process_comms(intra_process_comms))
-  {};
+  {
+    action_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    service_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    this->declare_parameter("bottom_problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
+  };
 
   CallbackReturnT BottomControllerNode::on_configure(const rclcpp_lifecycle::State & previous_state)
   {
@@ -33,8 +37,7 @@ namespace jigless_planner
       std::bind(&BottomControllerNode::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
       std::bind(&BottomControllerNode::handle_cancel, this, std::placeholders::_1),
       std::bind(&BottomControllerNode::handle_accepted, this, std::placeholders::_1));
-    this->declare_parameter("bottom_problem_file_path", "/home/mdh-es/multirobot_ws/src/jigless-planner/pddl/weldcell_problem_no_workpiece.pddl");
-    add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("problem_expert/add_problem");
+    add_problem_client_ = this->create_client<plansys2_msgs::srv::AddProblem>("problem_expert/add_problem", rmw_qos_profile_services_default, service_group_);
   };
 
   bool BottomControllerNode::init_knowledge()
@@ -51,7 +54,7 @@ namespace jigless_planner
     auto request = std::make_shared<plansys2_msgs::srv::AddProblem::Request>();
     request->problem = buffer.str();
     problem_file.close();
-    while(!add_problem_client_->wait_for_service(std::chrono::seconds(1))){
+    while(!add_problem_client_->wait_for_service(std::chrono::seconds(5))){
       if (!rclcpp::ok()){
         RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for the service. Exiting.");
         return false;
@@ -60,7 +63,7 @@ namespace jigless_planner
     }
     auto future = add_problem_client_->async_send_request(request).future.share();
     using namespace std::literals::chrono_literals;
-    auto status = future.wait_for(1s);
+    auto status = future.wait_for(5s);
     if (status == std::future_status::ready) {
     auto result = future.get();
     if (result->success){
@@ -95,7 +98,7 @@ namespace jigless_planner
       goal_ss << joint << " ";
     }
     RCLCPP_INFO(this->get_logger(), "Received goal request for joints: %s", goal_ss.str().c_str());
-    if (this->get_current_state().id() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+    if (this->get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
       return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
     } else {
       return rclcpp_action::GoalResponse::REJECT;
@@ -197,7 +200,7 @@ namespace jigless_planner
     }
 
     auto result = std::make_shared<RunBottom::Result>();
-    while (rclcpp::ok() && activated_) {
+    while (rclcpp::ok() && activated_ && !finished_) {
       if (goal_handle->is_canceling()) {
         RCLCPP_INFO(this->get_logger(), "Cancelling goal");
         executor_client_->cancel_plan_execution();
@@ -208,8 +211,9 @@ namespace jigless_planner
       }
       feedback->action_execution_status = executor_client_->getFeedBack().action_execution_status;
       goal_handle->publish_feedback(feedback);
-      if (executor_client_->execute_and_check_plan())
+      if (!executor_client_->execute_and_check_plan())
       { // Plan finished
+        finished_ = true;
         auto plan_result = executor_client_->getResult();
         result->success = plan_result.value().success;
         result->failed_joints = get_unfinished_action_args(plan_result.value().action_execution_status);
@@ -226,12 +230,20 @@ namespace jigless_planner
         }
       }
     }
+    if (finished_) {
+      RCLCPP_INFO(this->get_logger(), "Goal finished");
+      finished_ = false;
+    } 
+    if (!activated_) {
+      RCLCPP_ERROR(this->get_logger(), "Goal change recieved");
+    }
   };
 
   CallbackReturnT BottomControllerNode::on_deactivate(const rclcpp_lifecycle::State & previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller node");
     activated_ = false;
+    finished_ = false;
     interim_goal_ = problem_expert_->getGoal();
     // Clear goal
     problem_expert_->clearGoal(); // Should it though?
@@ -243,12 +255,15 @@ namespace jigless_planner
   {
     RCLCPP_INFO(this->get_logger(), "Cleaning up bottom controller node");
     activated_ = false;
+    finished_ = false;
 
     // Clean up problem knowledge
+    RCLCPP_INFO(this->get_logger(), "Cleaning up problem goal and knowledge");
     problem_expert_->clearGoal();
     problem_expert_->clearKnowledge();
 
     // Reset clients and action server
+    RCLCPP_INFO(this->get_logger(), "Resetting clients and action server");
     domain_expert_.reset();
     planner_client_.reset();
     problem_expert_.reset();
@@ -274,9 +289,10 @@ namespace jigless_planner
     executor_client_.reset();
     action_server_.reset();
     add_problem_client_.reset();
-    
+
     // Deactivate the node
     activated_ = false;
+    finished_ = false;
     LifecycleNode::on_shutdown(previous_state);
     return CallbackReturnT::SUCCESS;
   }

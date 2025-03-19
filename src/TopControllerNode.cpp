@@ -267,7 +267,7 @@ namespace jigless_planner
       }
       case RUNNING: {
         // Perform actions for the RUNNING state
-        if (executor_client_->execute_and_check_plan()) {
+        if (!executor_client_->execute_and_check_plan()) {
           auto plan_result = executor_client_->getResult();
           if (!plan_result.has_value()) {
             RCLCPP_ERROR(this->get_logger(), "Plan finished with error");
@@ -303,10 +303,12 @@ namespace jigless_planner
           state_ = STOPPED; 
           break;
         }
-        RCLCPP_INFO(this->get_logger(), "Running plan execution");
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000, "Running plan execution");
         auto current_actions = get_executing_actions(executor_client_->getFeedBack().action_execution_status);
         for (const auto &action : *current_actions) {
-          RCLCPP_INFO(this->get_logger(), "Executing action: %s with progress: %f", action.action_full_name.c_str(), action.completion);
+          RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+          "Executing action: %s with progress: %f", action.action_full_name.c_str(),
+          action.completion);
         }
         break;
       }

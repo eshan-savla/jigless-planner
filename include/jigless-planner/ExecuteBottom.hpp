@@ -31,6 +31,7 @@ class ExecuteBottom : public plansys2::ActionExecutorClient
 
     rclcpp::CallbackGroup::SharedPtr action_group_;
     rclcpp::CallbackGroup::SharedPtr publisher_group_;
+    rclcpp::PublisherOptions publisher_opts_;
 
     rclcpp::Publisher<jigless_planner_interfaces::msg::JointStatus>::SharedPtr joint_status_publisher_;
     rclcpp_action::Client<RunBottom>::SharedPtr action_client_;

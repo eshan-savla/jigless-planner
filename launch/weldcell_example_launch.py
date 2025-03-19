@@ -266,7 +266,9 @@ def generate_launch_description():
         name='execute_1',
         namespace=top_ns,
         output='screen',
-        parameters=[]
+        parameters=[
+            {'bottom_ns': bottom_ns},
+        ]
     )
 
     top_controller = Node(

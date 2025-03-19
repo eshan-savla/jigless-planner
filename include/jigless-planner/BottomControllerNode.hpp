@@ -49,7 +49,7 @@ namespace jigless_planner
     explicit BottomControllerNode(const std::string &node_name, bool intra_process_comms = false);
 
   private:
-    bool activated_ = false;
+    bool activated_ = false, finished_ = false;
     plansys2::Goal interim_goal_;
     std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
     std::shared_ptr<plansys2::PlannerClient> planner_client_;
@@ -58,6 +58,8 @@ namespace jigless_planner
     rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedPtr add_problem_client_;
 
     std::shared_ptr<rclcpp_action::Server<RunBottom>> action_server_;
+    rclcpp::CallbackGroup::SharedPtr action_group_;
+    rclcpp::CallbackGroup::SharedPtr service_group_;
 
     void init();
     bool init_knowledge();
