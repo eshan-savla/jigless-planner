@@ -1,0 +1,27 @@
+bottom_planner/executor:
+  ros__parameters:
+    enable_groot_monitoring: true
+    publisher_port: 2666
+    server_port: 2667
+
+top_planner/executor:
+  ros__parameters:
+    enable_groot_monitoring: true
+    publisher_port: 2668
+    server_port: 2669
+
+top_planner/planner:
+  ros__parameters:
+    plan_solver_plugins: ["POPF"]
+    POPF:
+      plugin: "plansys2/POPFPlanSolver"
+    TFD:
+      plugin: "plansys2/TFDPlanSolver"
+
+bottom_planner/planner:
+  ros__parameters:
+    plan_solver_plugins: ["POPF"]
+    POPF:
+      plugin: "plansys2/POPFPlanSolver"
+    TFD:
+      plugin: "plansys2/TFDPlanSolver"

@@ -51,7 +51,8 @@ def generate_launch_description():
           'model_file':
                     example_dir + '/pddl/transit_domain.pddl:' +
                     example_dir + '/pddl/weld_domain.pddl',
-          'namespace': bottom_ns
+          'namespace': bottom_ns,
+          'params_file': example_dir + '/config/bringup_params.yaml',
           }.items())
 
     plansys2_top = IncludeLaunchDescription(
@@ -62,7 +63,8 @@ def generate_launch_description():
         launch_arguments={
           'model_file':
                     example_dir + '/pddl/top_domain.pddl',
-          'namespace': top_ns
+          'namespace': top_ns,
+          'params_file': example_dir + '/config/bringup_params.yaml',
           }.items())
 
     # Specify the bottom actions
@@ -73,12 +75,9 @@ def generate_launch_description():
         namespace=bottom_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'transit',
-                'publisher_port': 1692,
-                'server_port': 1693,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/transit.xml'
             }
         ])
@@ -90,12 +89,9 @@ def generate_launch_description():
         namespace=bottom_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
                 'action_name': 'weld',
-                'enable_groot_monitoring': True,
-                'publisher_port': 1690,
-                'server_port': 1691,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/weld.xml'
             }
         ])
@@ -107,12 +103,9 @@ def generate_launch_description():
         namespace=bottom_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'validate',
-                'publisher_port': 1688,
-                'server_port': 1689,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/validate.xml'
             }
         ])
@@ -135,12 +128,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'command',
-                'publisher_port': 1668,
-                'server_port': 1669,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -152,12 +142,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'command',
-                'publisher_port': 1670,
-                'server_port': 1671,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -169,12 +156,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'command',
-                'publisher_port': 1672,
-                'server_port': 1673,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
             }
         ])
@@ -186,12 +170,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'move_robot',
-                'publisher_port': 1684,
-                'server_port': 1685,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/moverobot.xml'
             }
         ])
@@ -203,12 +184,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'set_status',
-                'publisher_port': 1674,
-                'server_port': 1675,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -220,12 +198,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'set_status',
-                'publisher_port': 1676,
-                'server_port': 1677,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -237,12 +212,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'set_status',
-                'publisher_port': 1678,
-                'server_port': 1679,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -254,12 +226,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'action_name': 'set_status',
-                'publisher_port': 1680,
-                'server_port': 1681,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -271,12 +240,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
-            example_dir + '/config/params.yaml',
+            example_dir + '/config/bt_params.yaml',
             {
                 'action_name': 'set_status',
-                'enable_groot_monitoring': True,
-                'publisher_port': 1682,
-                'server_port': 1683,
                 'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
             }
         ])
@@ -287,11 +253,9 @@ def generate_launch_description():
         namespace=top_ns,
         output='screen',
         parameters=[
+            example_dir + '/config/bt_params.yaml',
             {
-                'enable_groot_monitoring': True,
                 'bottom_ns': bottom_ns,
-                'publisher_port': 1686,
-                'server_port': 1687,
             },
         ]
     )
