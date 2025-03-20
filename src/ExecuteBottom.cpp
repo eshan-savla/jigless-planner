@@ -66,8 +66,9 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
       if (action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED)
         ++completed_goals;
     }
-  send_feedback(completed_goals / total_goals, "Execute Bottom running");
-    };
+    float progress = total_goals > 0 ? static_cast<float>(completed_goals) / total_goals : 0.0;
+    send_feedback(progress, "Execute Bottom running");
+  };
   send_goal_options.result_callback = [this](
     const GoalHandleRunBottom::WrappedResult & result) {
       bool finished = result.code == rclcpp_action::ResultCode::SUCCEEDED, publish_msg_ = false;
