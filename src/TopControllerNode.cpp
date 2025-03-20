@@ -292,6 +292,8 @@ namespace jigless_planner
           RCLCPP_INFO(this->get_logger(), "Clearing goal");
           problem_expert_->clearGoal();
           goal_joints.clear();
+          RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
+          set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
           RCLCPP_INFO(this->get_logger(), "Switching to READY state");
           state_ = READY;
           break;
