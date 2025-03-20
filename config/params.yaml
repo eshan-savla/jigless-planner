@@ -1,8 +1,0 @@
-move_robot:
-  ros__parameters:
-    plugins:
-      - jigless_planner_move_robot_bt_node
-move_workpiece:
-  ros__parameters:
-    plugins:
-      - jigless_planner_move_workpiece_bt_node

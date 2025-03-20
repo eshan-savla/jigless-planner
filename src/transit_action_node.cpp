@@ -22,11 +22,11 @@
 
 using namespace std::chrono_literals;
 
-class MoveWorkpieceAction : public plansys2::ActionExecutorClient
+class Transit : public plansys2::ActionExecutorClient
 {
 public:
-  MoveWorkpieceAction()
-  : plansys2::ActionExecutorClient("move_workpiece", 250ms)
+  Transit()
+  : plansys2::ActionExecutorClient("transit", 250ms)
   {
     progress_ = 0.0;
   }
@@ -35,17 +35,17 @@ private:
   void do_work()
   {
     if (progress_ < 1.0) {
-      progress_ += 0.02;
-      send_feedback(progress_, "Moving workpiece");
+      progress_ += 0.05;
+      send_feedback(progress_, "Transit running");
     } else {
-      finish(true, 1.0, "Move workpiece completed");
+      finish(true, 1.0, "Transit completed");
 
       progress_ = 0.0;
       std::cout << std::endl;
     }
 
     std::cout << "\r\e[K" << std::flush;
-    std::cout << "Moving workpiece ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
+    std::cout << "Transit running ... [" << std::min(100.0, progress_ * 100.0) << "%]  " <<
       std::flush;
   }
 
@@ -55,9 +55,9 @@ private:
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  auto node = std::make_shared<MoveWorkpieceAction>();
+  auto node = std::make_shared<Transit>();
 
-  node->set_parameter(rclcpp::Parameter("action_name", "move_workpiece"));
+  node->set_parameter(rclcpp::Parameter("action_name", "transit"));
   node->trigger_transition(lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
 
   rclcpp::spin(node->get_node_base_interface());

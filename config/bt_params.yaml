@@ -1,0 +1,89 @@
+bottom_planner/transit:
+  ros__parameters:
+    plugins:
+      - jigless_planner_transit_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1668
+    server_port: 1669
+bottom_planner/weld:
+  ros__parameters:
+    plugins:
+      - jigless_planner_weld_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1670
+    server_port: 1671
+bottom_planner/validate:
+  ros__parameters:
+    plugins:
+      - jigless_planner_validate_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1672
+    server_port: 1673
+top_planner/command_1:
+  ros__parameters:
+    plugins:
+      - jigless_planner_command_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1674
+    server_port: 1675
+top_planner/command_2:
+  ros__parameters:
+    plugins:
+      - jigless_planner_command_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1676
+    server_port: 1677
+top_planner/command_3:
+  ros__parameters:
+    plugins:
+      - jigless_planner_command_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1678
+    server_port: 1679
+top_planner/move_robot:
+  ros__parameters:
+    plugins:
+      - jigless_planner_moverobot_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1680
+    server_port: 1681
+top_planner/set_status_1:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1682
+    server_port: 1683
+top_planner/set_status_2:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1684
+    server_port: 1685
+top_planner/set_status_3:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1686
+    server_port: 1687
+top_planner/set_status_4:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1688
+    server_port: 1689
+top_planner/set_status_5:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setstatus_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1690
+    server_port: 1691
+top_planner/execute_1:
+  ros__parameters:
+    enable_groot_monitoring: true
+    publisher_port: 1692
+    server_port: 1693
