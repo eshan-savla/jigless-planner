@@ -37,7 +37,7 @@
 
 namespace jigless_planner
 {
-  using CallbackReturnT = 
+  using CallbackReturnT =
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
   class BottomControllerNode : public rclcpp_lifecycle::LifecycleNode
@@ -49,7 +49,7 @@ namespace jigless_planner
     explicit BottomControllerNode(const std::string &node_name, bool intra_process_comms = false);
 
   private:
-    bool activated_ = false, finished_ = false;
+    bool activated_ = false, finished_ = false, started_ = false;
     plansys2::Goal interim_goal_;
     std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
     std::shared_ptr<plansys2::PlannerClient> planner_client_;
@@ -58,8 +58,10 @@ namespace jigless_planner
     rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedPtr add_problem_client_;
 
     std::shared_ptr<rclcpp_action::Server<RunBottom>> action_server_;
-    rclcpp::CallbackGroup::SharedPtr action_group_;
+    rclcpp::CallbackGroup::SharedPtr timer_group_;
     rclcpp::CallbackGroup::SharedPtr service_group_;
+    rclcpp::TimerBase::SharedPtr timer_;
+    std::shared_ptr<GoalHandleRunBottom> current_goal_handle_;
 
     void init();
     bool init_knowledge();
@@ -76,6 +78,7 @@ namespace jigless_planner
     void handle_accepted(
       const std::shared_ptr<GoalHandleRunBottom> goal_handle);
     void execute(const std::shared_ptr<GoalHandleRunBottom> goal_handle);
+    void check_action();
 
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;
