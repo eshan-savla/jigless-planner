@@ -36,7 +36,7 @@ namespace jigless_planner
     ~TopControllerNode();
 
   private:
-    bool goal_changed_ = false, pause_ = false, cancel_ = false;
+    bool goal_changed_ = false, pause_ = false, cancel_ = false, goal_was_changed_ = false;
     std::vector<std::string> goal_joints;
     std::map<std::string, bool> failed_joints;
     std::mutex failed_joints_mutex_;

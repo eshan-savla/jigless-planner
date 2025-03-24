@@ -118,6 +118,8 @@ namespace jigless_planner
         pause_ = msg.status[i];
       failed_joints[msg.joints[i]] = msg.status[i];
     }
+    pause_ = pause_ && !goal_was_changed_ ? pause_ : false;
+    goal_was_changed_ = false;
   }
 
   void TopControllerNode::topServiceCallback(
@@ -135,12 +137,14 @@ namespace jigless_planner
       for (std::size_t i = 0; i < request->joints.joints.size(); ++i) {
         goal_joints.emplace_back(request->joints.joints[i]);
       }
+      goal_changed_ = true;
       break;
     }
     case jigless_planner_interfaces::srv::InteractTop::Request::REMOVE: {
       for (std::size_t i = 0; i < request->joints.joints.size(); ++i) {
         goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), request->joints.joints[i]), goal_joints.end());
       }
+      goal_changed_ = true;
       break;
     }
     case jigless_planner_interfaces::srv::InteractTop::Request::STOP: {
@@ -259,6 +263,9 @@ namespace jigless_planner
           }
           if (executor_client_->start_plan_execution(plan.value())) {
             RCLCPP_INFO(this->get_logger(), "Plan started");
+            pause_ = false;
+            cancel_ = false;
+            goal_changed_ = false;
             state_ = RUNNING;
             RCLCPP_INFO(this->get_logger(), "Switching to RUNNING state");
           } else {
@@ -298,18 +305,18 @@ namespace jigless_planner
           state_ = READY;
           break;
         }
+        if (goal_changed_) {
+          RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
+          executor_client_->cancel_plan_execution();
+          state_ = STOPPED;
+          break;
+        }
         {
           std::lock_guard<std::mutex> lock(failed_joints_mutex_);
           if (pause_) {
             state_ = PAUSED;
             break;
           }
-        }
-        if (goal_changed_) {
-          RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
-          executor_client_->cancel_plan_execution();
-          state_ = STOPPED;
-          break;
         }
         if (cancel_) {
           RCLCPP_INFO(this->get_logger(), "Stopping execution");
@@ -346,6 +353,7 @@ namespace jigless_planner
             goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first), goal_joints.end());
             problem_expert_->removePredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(welded " + pair.first + ")"));
+            problem_expert_->addPredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
           }
         }
         RCLCPP_INFO(this->get_logger(), "Updated predicates");
@@ -363,6 +371,8 @@ namespace jigless_planner
         problem_expert_->clearGoal();
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
+        goal_changed_ = false;
+        goal_was_changed_ = true;
         break;
       }
       case CANCELLED: {
