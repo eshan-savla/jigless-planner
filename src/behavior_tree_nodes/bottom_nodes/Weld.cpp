@@ -27,7 +27,7 @@ namespace jigless_planner::bottom_actions
     {
       std::cout << "Weld tick " << counter_ << std::endl;
 
-      if (counter_++ < 30) {
+      if (counter_++ < 15) {
         return BT::NodeStatus::RUNNING;
       } else {
         counter_ = 0;

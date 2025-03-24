@@ -27,7 +27,7 @@ namespace jigless_planner::bottom_actions
     {
       std::cout << "Transit tick " << counter_ << std::endl;
 
-      if (counter_++ < 20) {
+      if (counter_++ < 10) {
         return BT::NodeStatus::RUNNING;
       } else {
         counter_ = 0;
