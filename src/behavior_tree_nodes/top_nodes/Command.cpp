@@ -25,7 +25,7 @@ namespace jigless_planner::top_actions
   {
       std::cout << "Command tick " << counter_ << std::endl;
 
-      if (counter_++ < 5) {
+      if (counter_++ < 10) {
       return BT::NodeStatus::RUNNING;
       } else {
       counter_ = 0;
