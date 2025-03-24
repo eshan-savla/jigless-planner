@@ -27,6 +27,13 @@ std::vector<std::string> ExecuteBottom::getCommandedJoints()
   for (std::size_t i = 0; i < predicates.size(); ++i) {
     if (predicates[i].name == "commanded")
       commanded_joints.emplace_back(std::move(predicates[i].parameters[0].name));
+    if (predicates[i].name == "welded") {
+      auto it = std::find(commanded_joints.begin(), commanded_joints.end(),
+        predicates[i].parameters[0].name);
+      if (it != commanded_joints.end()) {
+        commanded_joints.erase(it);
+      }
+    }
   }
   return commanded_joints;
 }
