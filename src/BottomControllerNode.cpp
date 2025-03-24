@@ -88,6 +88,7 @@ namespace jigless_planner
 
   CallbackReturnT BottomControllerNode::on_activate(const rclcpp_lifecycle::State & previous_state)
   {
+    std::lock_guard<std::mutex> lock(activated_mutex_);
     RCLCPP_INFO(this->get_logger(), "Activating bottom controller node");
     LifecycleNode::on_activate(previous_state);
     activated_ = true;
@@ -209,8 +210,9 @@ namespace jigless_planner
 
   void BottomControllerNode::check_action()
   {
-    if (!started_ || !activated_ || finished_)
+    if (!started_ || !activated_)
       return;
+
     auto feedback = std::make_shared<RunBottom::Feedback>();
     auto result = std::make_shared<RunBottom::Result>();
 
@@ -227,7 +229,6 @@ namespace jigless_planner
     feedback->action_execution_status = executor_client_->getFeedBack().action_execution_status;
     current_goal_handle_->publish_feedback(feedback);
     if (!executor_client_->execute_and_check_plan()) { // Plan finished
-      finished_ = true;
       started_ = false;
       auto plan_result = executor_client_->getResult();
       result->success = plan_result.value().success;
@@ -241,11 +242,6 @@ namespace jigless_planner
         current_goal_handle_->abort(result);
         return;
       }
-    }
-    if (finished_) {
-      RCLCPP_INFO(this->get_logger(), "Goal finished");
-      started_ = false;
-      finished_ = false;
     }
     if (!activated_) {
       RCLCPP_ERROR(this->get_logger(), "Goal change recieved");
@@ -266,11 +262,12 @@ namespace jigless_planner
     if (started_) {
       RCLCPP_INFO(this->get_logger(), "Waiting for current goal to finish before deactivating");
       while (started_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
       }
     }
+    std::unique_lock<std::mutex> lock(activated_mutex_);
     activated_ = false;
-    finished_ = false;
+    lock.unlock();
     interim_goal_ = problem_expert_->getGoal();
     // Clear goal
     problem_expert_->clearGoal(); // Should it though?
@@ -279,8 +276,9 @@ namespace jigless_planner
   CallbackReturnT BottomControllerNode::on_cleanup(const rclcpp_lifecycle::State & previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Cleaning up bottom controller node");
+    std::unique_lock<std::mutex> lock(activated_mutex_);
     activated_ = false;
-    finished_ = false;
+    lock.unlock();
 
     // Clean up problem knowledge
     RCLCPP_INFO(this->get_logger(), "Cleaning up problem goal and knowledge");
@@ -316,8 +314,8 @@ namespace jigless_planner
     add_problem_client_.reset();
 
     // Deactivate the node
+    std::lock_guard<std::mutex> lock(activated_mutex_);
     activated_ = false;
-    finished_ = false;
     LifecycleNode::on_shutdown(previous_state);
     return CallbackReturnT::SUCCESS;
   }

@@ -9,6 +9,7 @@
 #include <vector>
 #include <utility>
 #include <fstream>
+#include <mutex>
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_action/rclcpp_action.hpp>
@@ -49,7 +50,8 @@ namespace jigless_planner
     explicit BottomControllerNode(const std::string &node_name, bool intra_process_comms = false);
 
   private:
-    bool activated_ = false, finished_ = false, started_ = false, cancel_ = false;
+    bool activated_ = false, started_ = false, cancel_ = false;
+    std::mutex activated_mutex_;
     plansys2::Goal interim_goal_;
     std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
     std::shared_ptr<plansys2::PlannerClient> planner_client_;
