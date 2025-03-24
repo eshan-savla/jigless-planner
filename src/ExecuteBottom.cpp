@@ -61,6 +61,21 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   return ActionExecutorClient::on_activate(previous_state);
 }
 
+rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
+  ExecuteBottom::on_deactivate(const rclcpp_lifecycle::State & previous_state)
+{
+  if (action_client_){
+    RCLCPP_INFO(this->get_logger(), "Cancelling bottom controller execution");
+    auto goal_handle = future_executor_goal_handle_.get();
+    if (goal_handle) {
+      auto cancel_future = action_client_->async_cancel_goal(goal_handle);
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Goal handle is null");
+    }
+  }
+  return ActionExecutorClient::on_deactivate(previous_state);
+}
+
 void ExecuteBottom::feedbackCallback(
   GoalHandleRunBottom::SharedPtr,
   const std::shared_ptr<const RunBottom::Feedback> & feedback)

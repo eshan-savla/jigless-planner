@@ -48,6 +48,8 @@ class ExecuteBottom : public plansys2::ActionExecutorClient
     // void responseCallback(std::shared_future<GoalHandleRunBottom::SharedPtr> future);
     rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
       const rclcpp_lifecycle::State & previous_state) override;
+    rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
+      const rclcpp_lifecycle::State & previous_state) override;
 };
 
 #endif  // JIGLESS_PLANNER_EXECUTEBOTTOM_HPP

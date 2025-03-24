@@ -41,7 +41,7 @@ namespace jigless_planner
       "problem_expert/add_problem", rmw_qos_profile_services_default, service_group_);
     {
       using namespace std::chrono_literals;
-      timer_ = this->create_wall_timer(1s, std::bind(&BottomControllerNode::check_action, this),
+      timer_ = this->create_wall_timer(100ms, std::bind(&BottomControllerNode::check_action, this),
         timer_group_);
     }
   };
@@ -116,6 +116,7 @@ namespace jigless_planner
   {
     RCLCPP_INFO(this->get_logger(), "Received cancel request");
     (void)goal_handle;
+    cancel_ = true;
     return rclcpp_action::CancelResponse::ACCEPT;
   };
 
@@ -212,13 +213,15 @@ namespace jigless_planner
       return;
     auto feedback = std::make_shared<RunBottom::Feedback>();
     auto result = std::make_shared<RunBottom::Result>();
-    if (current_goal_handle_->is_canceling()) {
+
+    if (cancel_) {
       RCLCPP_INFO(this->get_logger(), "Cancelling goal");
       executor_client_->cancel_plan_execution();
       result->success = false;
       result->failed_joints = get_unfinished_action_args(executor_client_->getFeedBack().action_execution_status);
       current_goal_handle_->canceled(result);
       started_ = false;
+      cancel_ = false;
       return;
     }
     feedback->action_execution_status = executor_client_->getFeedBack().action_execution_status;
@@ -253,13 +256,24 @@ namespace jigless_planner
   CallbackReturnT BottomControllerNode::on_deactivate(const rclcpp_lifecycle::State & previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller node");
+    std::thread(std::bind(&BottomControllerNode::deactivate_node, this)).detach();
+    LifecycleNode::on_deactivate(previous_state);
+    return CallbackReturnT::SUCCESS;
+  }
+
+  void BottomControllerNode::deactivate_node()
+  {
+    if (started_) {
+      RCLCPP_INFO(this->get_logger(), "Waiting for current goal to finish before deactivating");
+      while (started_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+    }
     activated_ = false;
     finished_ = false;
     interim_goal_ = problem_expert_->getGoal();
     // Clear goal
     problem_expert_->clearGoal(); // Should it though?
-    LifecycleNode::on_deactivate(previous_state);
-    return CallbackReturnT::SUCCESS;
   }
 
   CallbackReturnT BottomControllerNode::on_cleanup(const rclcpp_lifecycle::State & previous_state)

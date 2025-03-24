@@ -49,7 +49,7 @@ namespace jigless_planner
     explicit BottomControllerNode(const std::string &node_name, bool intra_process_comms = false);
 
   private:
-    bool activated_ = false, finished_ = false, started_ = false;
+    bool activated_ = false, finished_ = false, started_ = false, cancel_ = false;
     plansys2::Goal interim_goal_;
     std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
     std::shared_ptr<plansys2::PlannerClient> planner_client_;
@@ -79,6 +79,7 @@ namespace jigless_planner
       const std::shared_ptr<GoalHandleRunBottom> goal_handle);
     void execute(const std::shared_ptr<GoalHandleRunBottom> goal_handle);
     void check_action();
+    void deactivate_node();
 
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;
