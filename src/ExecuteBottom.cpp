@@ -52,52 +52,10 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   goal.joints.joints = std::move(getCommandedJoints());
   goal.operation = goal.START;
   auto send_goal_options = rclcpp_action::Client<RunBottom>::SendGoalOptions();
-  send_goal_options.feedback_callback = [this](
-    GoalHandleRunBottom::SharedPtr,
-    const std::shared_ptr<const RunBottom::Feedback> & feedback) {
-    RCLCPP_INFO(this->get_logger(), "Execute Bottom running");
-    int total_goals = feedback->action_execution_status.size();
-    int completed_goals = 0;
-    for (const auto &action : feedback->action_execution_status) {
-      if (action.status == plansys2_msgs::msg::ActionExecutionInfo::EXECUTING) {
-        RCLCPP_INFO(this->get_logger(), "Executing action: %s with progress: %f",
-        action.action_full_name.c_str(), action.completion);
-      }
-      if (action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED)
-        ++completed_goals;
-    }
-    float progress = total_goals > 0 ? static_cast<float>(completed_goals) / total_goals : 0.0;
-    send_feedback(progress, "Execute Bottom running");
-  };
-  send_goal_options.result_callback = [this](
-    const GoalHandleRunBottom::WrappedResult & result) {
-      bool finished = result.code == rclcpp_action::ResultCode::SUCCEEDED, publish_msg_ = false;
-      auto message = jigless_planner_interfaces::msg::JointStatus();
-      message.joints.reserve(result.result->failed_joints.joints.size());
-      message.status.reserve(result.result->failed_joints.joints.size());
-      for (std::size_t i = 0; i < result.result->failed_joints.joints.size(); ++i) {
-        message.joints.emplace_back(std::move(result.result->failed_joints.joints[i]));
-        message.status.emplace_back(std::move(result.result->failed_joints.status[i]));
-        if(!publish_msg_)
-          publish_msg_ = result.result->failed_joints.status[i];
-      }
-      switch (result.code) {
-        case rclcpp_action::ResultCode::SUCCEEDED:
-          RCLCPP_INFO(this->get_logger(), "Execute Bottom completed");
-          break;
-        case rclcpp_action::ResultCode::ABORTED:
-          RCLCPP_ERROR(this->get_logger(), "Execute Bottom aborted");
-          break;
-        case rclcpp_action::ResultCode::CANCELED:
-          RCLCPP_WARN(this->get_logger(), "Execute Bottom canceled");
-          break;
-      }
-      if (publish_msg_) {
-        joint_status_publisher_->publish(message);
-        RCLCPP_INFO(this->get_logger(), "Publishing failed joint status");
-      }
-      finish(finished, 1.0, "Execute Bottom completed");
-    };
+  send_goal_options.feedback_callback = std::bind(
+    &ExecuteBottom::feedbackCallback, this, std::placeholders::_1, std::placeholders::_2);
+  send_goal_options.result_callback = std::bind(
+    &ExecuteBottom::resultCallback, this, std::placeholders::_1);
   RCLCPP_INFO(this->get_logger(), "Sending goal to bottom controller");
   future_executor_goal_handle_ = action_client_->async_send_goal(goal, send_goal_options);
   return ActionExecutorClient::on_activate(previous_state);
@@ -107,18 +65,19 @@ void ExecuteBottom::feedbackCallback(
   GoalHandleRunBottom::SharedPtr,
   const std::shared_ptr<const RunBottom::Feedback> & feedback)
 {
-  RCLCPP_INFO(this->get_logger(), "Execute Bottom running");
+  RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Execute Bottom running");
   int total_goals = feedback->action_execution_status.size();
   int completed_goals = 0;
   for (const auto &action : feedback->action_execution_status) {
     if (action.status == plansys2_msgs::msg::ActionExecutionInfo::EXECUTING) {
-      RCLCPP_INFO(this->get_logger(), "Executing action: %s with progress: %f",
-      action.action_full_name.c_str(), action.completion);
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+      "Executing action: %s with progress: %f", action.action_full_name.c_str(), action.completion);
     }
     if (action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED)
       ++completed_goals;
   }
-  send_feedback(completed_goals / total_goals, "Execute Bottom running");
+  float progress = total_goals > 0 ? static_cast<float>(completed_goals) / total_goals : 0.0;
+  send_feedback(progress, "Execute Bottom running");
 }
 
 void ExecuteBottom::resultCallback(const GoalHandleRunBottom::WrappedResult & result)
