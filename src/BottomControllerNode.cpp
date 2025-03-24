@@ -135,13 +135,13 @@ namespace jigless_planner
     rclcpp::Rate loop_rate(1);
     const auto goal = goal_handle->get_goal();
     std::stringstream goal_str;
-    goal_str << "(:goal (and ";
+    goal_str << "(:goal (and";
     switch (goal->operation)
     {
       case RunBottom::Goal::START: {
         RCLCPP_INFO(this->get_logger(), "Setting joints as goal");
         for (const auto & joint : goal->joints.joints) {
-          goal_str << "(welded " << joint << ") ";
+          goal_str << " (welded " << joint << ")";
         }
         break;
       }
@@ -153,7 +153,7 @@ namespace jigless_planner
         interim_str.pop_back();
         goal_str << interim_str;
         for (const auto & joint : goal->joints.joints) {
-          goal_str << "(welded " << joint << ") ";
+          goal_str << " (welded " << joint << ")";
         }
         break;
       }
