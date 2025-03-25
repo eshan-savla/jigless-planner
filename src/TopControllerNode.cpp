@@ -136,12 +136,15 @@ namespace jigless_planner
       goal_joints.reserve(goal_joints.size() + request->joints.joints.size());
       for (std::size_t i = 0; i < request->joints.joints.size(); ++i) {
         goal_joints.emplace_back(request->joints.joints[i]);
+        problem_expert_->addInstance(plansys2::Instance(request->joints.joints[i], "joint"));
       }
       goal_changed_ = true;
       break;
     }
     case jigless_planner_interfaces::srv::InteractTop::Request::REMOVE: {
       for (std::size_t i = 0; i < request->joints.joints.size(); ++i) {
+        bool success = problem_expert_->removePredicate(plansys2::Predicate("(commanded " + request->joints.joints[i] + ")"));
+        problem_expert_->removeInstance(plansys2::Instance(request->joints.joints[i], "joint"));
         goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), request->joints.joints[i]), goal_joints.end());
       }
       goal_changed_ = true;
@@ -249,6 +252,7 @@ namespace jigless_planner
             goal_ss << " (welded "<< joint << ")";
           }
           goal_ss << "))";
+          std::string s = goal_ss.str();
           RCLCPP_INFO(this->get_logger(), "Received goal request");
           problem_expert_->setGoal(plansys2::Goal(goal_ss.str()));
           std::string domain = domain_expert_->getDomain();
