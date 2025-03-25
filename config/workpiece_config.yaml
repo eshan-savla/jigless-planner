@@ -1,0 +1,11 @@
+workpieces:
+  joint1: ["workpiece1", "workpiece2"]
+  joint2: ["workpiece1", "workpiece2"]
+  joint3: ["workpiece1", "workpiece2"]
+  joint4: ["workpiece1", "workpiece3"]
+  joint5: ["workpiece1", "workpiece3"]
+  joint6: ["workpiece1", "workpiece3"]
+  joint7: ["workpiece1", "workpiece4"]
+  joint8: ["workpiece1", "workpiece4"]
+  joint9: ["workpiece1", "workpiece4"]
+  joint10: ["workpiece1", "workpiece4"]

@@ -25,7 +25,9 @@ namespace jigless_planner::bottom_actions
     BT::NodeStatus
     Validate::tick()
     {
-      std::cout << "Validate tick " << counter_ << std::endl;
+      std::string joint;
+      getInput("joint", joint);
+      std::cout << "Validate " << joint << " tick " << counter_ << std::endl;
 
       if (counter_++ < 7) {
         return BT::NodeStatus::RUNNING;
