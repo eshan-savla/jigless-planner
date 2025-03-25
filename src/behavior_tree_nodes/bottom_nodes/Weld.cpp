@@ -25,7 +25,9 @@ namespace jigless_planner::bottom_actions
     BT::NodeStatus
     Weld::tick()
     {
-      std::cout << "Weld tick " << counter_ << std::endl;
+      std::string joint;
+      getInput("joint", joint);
+      std::cout << "Weld " << joint << " tick " << counter_ << std::endl;
 
       if (counter_++ < 15) {
         return BT::NodeStatus::RUNNING;

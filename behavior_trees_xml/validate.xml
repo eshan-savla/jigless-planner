@@ -1,7 +1,7 @@
 <root main_tree_to_execute = "MainTree" >
     <BehaviorTree ID="MainTree">
        <Sequence name="root_sequence">
-           <Validate    name="validate"/>
+           <Validate    name="validate" joint="${arg0}"/>
        </Sequence>
     </BehaviorTree>
 </root>

@@ -22,7 +22,9 @@ namespace jigless_planner::bottom_actions
 
       static BT::PortsList providedPorts()
       {
-        return BT::PortsList({});
+        return BT::PortsList({
+          BT::InputPort<std::string>("joint")
+        });
       }
 
     private:
