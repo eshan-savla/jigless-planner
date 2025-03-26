@@ -10,6 +10,7 @@
     (reachable_at ?j - joint ?p - position)
     ;; Indicates that a joint is scheduled (commanded) to be welded.
     (commanded ?j - joint)
+    (commandable ?j - joint)
     ;; Execution status
     (not_executed)
     (executed)
@@ -27,6 +28,21 @@
       :duration (= ?duration 1)
       :condition (and 
           (over all (and 
+            (commandable ?j)
+          ))
+      )
+      :effect (and 
+          (at end (and 
+            (commanded ?j)
+          ))
+      )
+  )
+
+  (:durative-action set_commandable
+      :parameters (?j - joint ?p - position)
+      :duration (= ?duration 1)
+      :condition (and 
+          (over all (and 
             (not_executed)
             (at ?p)
             (not_welded ?j)
@@ -36,10 +52,11 @@
       )
       :effect (and 
           (at end (and 
-            (commanded ?j)
+            (commandable ?j)
           ))
       )
   )
+  
   
 
   ;; This durative action models an external call to the bottom planner
@@ -53,7 +70,7 @@
                   (at ?p)
                   (not_executed)
                   (forall (?j - joint)  
-                    (imply (reachable_at ?j ?p) (commanded ?j))  
+                    (imply (reachable_at ?j ?p) (commandable ?j))  
                   )
                 ))
               )

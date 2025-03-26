@@ -163,6 +163,48 @@ def generate_launch_description():
             }
         ])
 
+    set_commandable_1_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_commandable_1',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/bt_params.yaml',
+            {
+                'action_name': 'set_commandable',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
+            }
+        ])
+    
+    set_commandable_2_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_commandable_2',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/bt_params.yaml',
+            {
+                'action_name': 'set_commandable',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
+            }
+        ])
+    
+    set_commandable_3_cmd = Node(
+        package='plansys2_bt_actions',
+        executable='bt_action_node',
+        name='set_commandable_3',
+        namespace=top_ns,
+        output='screen',
+        parameters=[
+            example_dir + '/config/bt_params.yaml',
+            {
+                'action_name': 'set_commandable',
+                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
+            }
+        ])
+    
     moverobot_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -291,6 +333,9 @@ def generate_launch_description():
     ld.add_action(command_1_cmd)
     ld.add_action(command_2_cmd)
     ld.add_action(command_3_cmd)
+    ld.add_action(set_commandable_1_cmd)
+    ld.add_action(set_commandable_2_cmd)
+    ld.add_action(set_commandable_3_cmd)
     ld.add_action(moverobot_cmd)
     ld.add_action(set_status_1_cmd)
     ld.add_action(set_status_2_cmd)

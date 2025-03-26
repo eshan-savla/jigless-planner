@@ -79,6 +79,9 @@ list(APPEND plugin_libs jigless_planner_moverobot_bt_node)
 add_library(jigless_planner_setstatus_bt_node SHARED src/behavior_tree_nodes/top_nodes/SetStatus.cpp)
 list(APPEND plugin_libs jigless_planner_setstatus_bt_node)
 
+add_library(jigless_planner_setcommandable_bt_node SHARED src/behavior_tree_nodes/top_nodes/SetCommandable.cpp)
+list(APPEND plugin_libs jigless_planner_setcommandable_bt_node)
+
 foreach(bt_plugin ${plugin_libs})
   ament_target_dependencies(${bt_plugin} ${dependencies})
   target_compile_definitions(${bt_plugin} PRIVATE BT_PLUGIN_EXPORT)
@@ -94,16 +97,10 @@ ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
-  jigless_planner_transit_bt_node
-  jigless_planner_weld_bt_node
-  jigless_planner_validate_bt_node
-  jigless_planner_command_bt_node
-  jigless_planner_moverobot_bt_node
-  jigless_planner_setstatus_bt_node
   bottom_controller_node
   top_controller_node
   execute_bottom_node
-  # ${plugin_libs}
+  ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

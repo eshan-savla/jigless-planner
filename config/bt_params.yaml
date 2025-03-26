@@ -87,3 +87,24 @@ top_planner/execute_1:
     enable_groot_monitoring: true
     publisher_port: 1692
     server_port: 1693
+top_planner/set_commandable_1:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setcommandable_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1694
+    server_port: 1695
+top_planner/set_commandable_2:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setcommandable_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1696
+    server_port: 1697
+top_planner/set_commandable_3:
+  ros__parameters:
+    plugins:
+      - jigless_planner_setcommandable_bt_node
+    enable_groot_monitoring: true
+    publisher_port: 1698
+    server_port: 1699
