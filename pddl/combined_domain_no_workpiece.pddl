@@ -16,7 +16,7 @@
 
   (:durative-action transit
     :parameters (?from ?to - joint)
-    :duration (= ?duration 1)
+    :duration (= ?duration 5)
     :condition (and
           (at start (and
             (joint_orientation ?from)
@@ -24,28 +24,22 @@
           )
       
     :effect (and
-        (at start (and
-          (not (joint_orientation ?from))
-          ; (not_seam_measured ?from)
-          ; (not (seam_measured ?from))
-        ))
+        (at start (not (joint_orientation ?from)))
 
-        (at end (and
-          (joint_orientation ?to)
-        ))
-    ) 
+        (at end (joint_orientation ?to))
+    )
   )
 
   (:durative-action weld
     :parameters (?j - joint)
-    :duration (= ?duration 1)
+    :duration (= ?duration 10)
     :condition (and (over all (and 
             (not_welded ?j)
             (seam_measured ?j)
             (joint_orientation ?j)
           ))
         )
-    :effect (and
+    :effect (and 
           (at end (and 
                 (welded ?j)
                 (not (not_welded ?j))
@@ -55,7 +49,7 @@
   
   (:durative-action validate
       :parameters (?j - joint)
-      :duration (= ?duration 1)
+      :duration (= ?duration 4)
       :condition (and 
           (at start (and 
               (not_seam_measured ?j)
