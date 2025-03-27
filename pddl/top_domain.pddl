@@ -13,6 +13,7 @@
     (commandable ?j - joint)
     ;; Execution status
     (not_executed)
+    (not_executing)
     (executed)
     ;; Indicates the current position of a welding robot.
     (at ?p - position)
@@ -28,6 +29,7 @@
       :duration (= ?duration 1)
       :condition (and 
           (over all (and 
+            (not_executing)
             (commandable ?j)
           ))
       )
@@ -44,6 +46,7 @@
       :condition (and 
           (over all (and 
             (not_executed)
+            (not_executing)
             (at ?p)
             (not_welded ?j)
             (reachable_at ?j ?p)
@@ -66,6 +69,7 @@
     :parameters (?p - position)
     :duration (= ?duration 20)
     :condition (and 
+                (at start (not_executing)) 
                 (over all (and
                   (at ?p)
                   (not_executed)
@@ -74,10 +78,14 @@
                   )
                 ))
               )
-    :effect (at end (and
-      (executed)
-      (not (not_executed))  
-    ))
+    :effect (and 
+      (at start (not (not_executing)))
+      (at end (and
+        (not_executing)
+        (executed)
+        (not (not_executed))  
+      ))
+    )
   )
 
   ;; This durative action sets the status of welded joints after the call to the bottom planner.
