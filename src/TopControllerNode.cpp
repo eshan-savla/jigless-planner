@@ -142,7 +142,7 @@ namespace jigless_planner
     }
     case jigless_planner_interfaces::srv::InteractTop::Request::REMOVE: {
       for (std::size_t i = 0; i < request->joints.joints.size(); ++i) {
-        bool success = problem_expert_->removePredicate(plansys2::Predicate("(commanded " + request->joints.joints[i] + ")"));
+        problem_expert_->removePredicate(plansys2::Predicate("(commanded " + request->joints.joints[i] + ")"));
         goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), request->joints.joints[i]), goal_joints.end());
       }
       goal_changed_ = true;
@@ -361,6 +361,8 @@ namespace jigless_planner
         RCLCPP_INFO(this->get_logger(), "Updated predicates");
         RCLCPP_INFO(this->get_logger(), "Clearing goal for replanning under new circumstances");
         problem_expert_->clearGoal();
+        RCLCPP_INFO(this->get_logger(), "Resetting execution status");
+        problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
         state_ = READY;
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         break;
@@ -371,6 +373,10 @@ namespace jigless_planner
         set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
         RCLCPP_INFO(this->get_logger(), "Clearing goal");
         problem_expert_->clearGoal();
+        RCLCPP_INFO(this->get_logger(), "Resetting execution status");
+        auto predicates = problem_expert_->getPredicates();
+        auto dom_preds = domain_expert_->getPredicates();
+        bool success = problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
         goal_changed_ = false;
@@ -386,6 +392,8 @@ namespace jigless_planner
         RCLCPP_INFO(this->get_logger(), "Clearing goal");
         problem_expert_->clearGoal();
         goal_joints.clear();
+        RCLCPP_INFO(this->get_logger(), "Resetting execution status");
+        problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
         std::unique_lock<std::mutex> lock(interaction_mutex_);
