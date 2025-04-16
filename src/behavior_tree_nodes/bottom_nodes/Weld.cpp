@@ -12,7 +12,7 @@ namespace jigless_planner::bottom_actions
     Weld::Weld(
       const std::string & xml_tag_name,
       const BT::NodeConfiguration & conf)
-    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0)
+    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0), duration_(10)
     {
     }
 
@@ -27,9 +27,15 @@ namespace jigless_planner::bottom_actions
     {
       std::string joint;
       getInput("joint", joint);
-      std::cout << "Weld " << joint << " tick " << counter_ << std::endl;
-
-      if (counter_++ < 15) {
+      if (counter_ == 0) {
+        start_time_ = std::chrono::steady_clock::now();
+        std::cout << "Welding " << joint << " tick " << ++counter_ << std::endl;
+        return BT::NodeStatus::RUNNING;
+      }
+      
+      auto elapsed_time = std::chrono::steady_clock::now() - start_time_;
+      if (elapsed_time < duration_) {
+        std::cout << "Weld " << joint << " tick " << ++counter_ << std::endl;
         return BT::NodeStatus::RUNNING;
       } else {
         counter_ = 0;

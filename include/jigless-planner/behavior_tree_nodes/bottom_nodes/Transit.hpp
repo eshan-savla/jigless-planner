@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <chrono>
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <yaml-cpp/yaml.h>
 #include <plansys2_problem_expert/ProblemExpertClient.hpp>
@@ -39,6 +40,8 @@ namespace jigless_planner::bottom_actions
       std::unordered_map<std::string, std::vector<std::string>> joint_workpieces_, workpiece_fuses_;
       std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
 
+      std::chrono::steady_clock::time_point start_time_;
+      std::chrono::seconds duration_;
       void createMap(const std::string & file_path);
       void updateStatus();
     };

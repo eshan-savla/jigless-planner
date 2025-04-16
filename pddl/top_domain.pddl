@@ -20,7 +20,9 @@
     ;; Indicates dependency between two joints.
     (depends_on ?j1 ?j2 - joint)
   )
-
+  (:functions
+    (avg_joints_per_group)
+  )
   ; Updating of welding commands by addition or ommission of joints is to be handled by a seperate thread and not part of the planning problem.
 
   
@@ -67,7 +69,7 @@
   ;; commanded, and not yet welded. 
   (:durative-action execute
     :parameters (?p - position)
-    :duration (= ?duration 20)
+    :duration (= ?duration (* (avg_joints_per_group) 19))
     :condition (and 
                 (at start (not_executing)) 
                 (over all (and

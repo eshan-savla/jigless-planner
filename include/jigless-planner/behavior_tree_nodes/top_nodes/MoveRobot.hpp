@@ -2,7 +2,7 @@
 #define JIGLESSPLANNER_MOVEROBOT_HPP
 
 #include <string>
-
+#include <chrono>
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 
@@ -26,6 +26,8 @@ namespace jigless_planner::top_actions
 
   private:
     int counter_;
+    std::chrono::steady_clock::time_point start_time_;
+    std::chrono::seconds duration_;
   };
 
 }  // namespace_ jigless_planner

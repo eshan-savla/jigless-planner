@@ -307,6 +307,7 @@ namespace jigless_planner
           state_ = READY;
           break;
         }
+        // Save feedback at every check to be used later.
         if (goal_changed_) {
           RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
           executor_client_->cancel_plan_execution();
@@ -343,6 +344,12 @@ namespace jigless_planner
         std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
         pause_ = false;
         joints_lock.unlock();
+        // Determine pos of execute-bottom from feedback. Find execute-bottom action closest to plan execution state. Can use status_stamp. 
+        // Algorithm to get nearest:
+        //  Build Binary tree based on action times.
+        //  Check status (SUCCEEDED) of pos determining action (move_robot)
+        //  If true, check next execute to right
+        //  Else, check next to left
         for (const auto &pair : failed_joints_cp) {
           if (pair.second) {
             RCLCPP_WARN(this->get_logger(), "Failed joint: %s", pair.first.c_str());
@@ -350,6 +357,9 @@ namespace jigless_planner
             problem_expert_->removePredicate(plansys2::Predicate("(welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->removePredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
+            // Add case where goal_changed_ is checked. If no, change reachable pos. Warn if no new pos and retry from same.
+            // Get reachable poses of joint via built-in method which searches through predicates.
+            // Determine execute-bottom pos and remove that from joint, if alternatives are there.
           } else {
             RCLCPP_INFO(this->get_logger(), "Joint %s is ok", pair.first.c_str());
             goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first), goal_joints.end());

@@ -37,6 +37,7 @@
     (depends_on joint10 joint9)
     (not_executed)
     (not_executing)
+    (= (avg_joints_per_group) 5)
   )
   (:goal
     (and

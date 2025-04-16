@@ -12,7 +12,7 @@ namespace jigless_planner::bottom_actions
     Transit::Transit(
       const std::string & xml_tag_name,
       const BT::NodeConfiguration & conf)
-    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0)
+    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0), duration_(5)
     {
       problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
       std::string package_name, map_file;
@@ -74,6 +74,7 @@ namespace jigless_planner::bottom_actions
       getInput<std::string>("joint2", joint2);
       std::stringstream out_ss;
       if (counter_++ == 0 ) {
+        start_time_ = std::chrono::steady_clock::now();
         updateStatus();
         out_ss << "Transiting to " << joint2 << " from " << joint1 << std::endl;
         if(joint_workpieces_.find(joint2) == joint_workpieces_.end()) {
@@ -99,8 +100,9 @@ namespace jigless_planner::bottom_actions
         std::cout << out_ss.str() << std::endl;
         return BT::NodeStatus::RUNNING;
       }
-      if (counter_++ < 10) {
-        std::cout << "Transit tick " << counter_ << std::endl;
+      auto elapsed_time = std::chrono::steady_clock::now() - start_time_;
+      if (elapsed_time < duration_) {
+        std::cout << "Transit tick " << ++counter_ << std::endl;
         return BT::NodeStatus::RUNNING;
       } else {
         counter_ = 0;
