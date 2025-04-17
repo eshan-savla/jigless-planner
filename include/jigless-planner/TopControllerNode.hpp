@@ -39,8 +39,10 @@ namespace jigless_planner
     bool goal_changed_ = false, pause_ = false, cancel_ = false, goal_was_changed_ = false;
     std::vector<std::string> goal_joints;
     std::map<std::string, bool> failed_joints;
+    std::unordered_map<std::string, std::vector<std::string>> reachable_pos_map_;
     std::mutex failed_joints_mutex_;
     std::mutex interaction_mutex_;
+    std::vector<plansys2_msgs::msg::ActionExecutionInfo> feedback_;
     typedef enum
     {
       STARTING,
@@ -78,14 +80,18 @@ namespace jigless_planner
     std::unique_ptr<std::vector<plansys2_msgs::msg::ActionExecutionInfo>> get_executing_actions(
       const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &feedback);
     void jointCallback(const jigless_planner_interfaces::msg::JointStatus & msg);
+    std::string getCurrentPosFromAction(const std::string & action_name) const;
+    std::vector<std::string> getReachablePos(const std::string & instance);
+    std::vector<plansys2::Predicate> getInstancePredicates(const std::string & predicate_name,
+      const std::string & instance_name) const;
     void topServiceCallback(
-      const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Request> request,
-      const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Response> response);
+        const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Request> request,
+        const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Response> response);
     void step(); // Runs the whole loop with state change based actions
     // bool response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future);
     // void get_state_callback(rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedFuture future);
     // void set_state_callback(rclcpp::Client<lifecycle_msgs::srv::ChangeState>::SharedFuture future);
-
+    
     unsigned int get_state();
     bool set_state(unsigned int state);
   };

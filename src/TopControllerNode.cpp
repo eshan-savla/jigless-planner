@@ -234,13 +234,15 @@ namespace jigless_planner
       }
       case READY: {
       // Perform actions for the READY state
+        feedback_.clear();
         if (cancel_)
           cancel_ = false;
         if (!goal_joints.empty()){
-          if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE)){
-            resetTimer(std::chrono::milliseconds(1000));
-            break;
-          }
+          if (get_state() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
+            if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE)){
+              resetTimer(std::chrono::milliseconds(1000));
+              break;
+            }
           if (step_duration_ > std::chrono::milliseconds(100)) {
             resetTimer(std::chrono::milliseconds(100));
           }
@@ -308,10 +310,10 @@ namespace jigless_planner
           break;
         }
         // Save feedback at every check to be used later.
+        feedback_ = executor_client_->getFeedBack().action_execution_status;
         if (goal_changed_) {
           RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
-          executor_client_->cancel_plan_execution();
-          state_ = STOPPED;
+          state_ = PAUSED;
           break;
         }
         {
@@ -337,19 +339,36 @@ namespace jigless_planner
       }
       case PAUSED: {
         // Perform actions for the PAUSED state
-        RCLCPP_WARN(this->get_logger(), "Paused as some joints failed to weld");
+        RCLCPP_WARN_EXPRESSION(this->get_logger(), goal_changed_, "Paused as goal changed");
+        RCLCPP_WARN_EXPRESSION(this->get_logger(), !goal_changed_, "Paused as some joints failed to weld");
         RCLCPP_WARN(this->get_logger(), "Cancelling plan execution");
         executor_client_->cancel_plan_execution();
+        if (goal_changed_) {
+          RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
+          set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+        }
         std::unique_lock<std::mutex> joints_lock(failed_joints_mutex_);
-        std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
-        pause_ = false;
         joints_lock.unlock();
-        // Determine pos of execute-bottom from feedback. Find execute-bottom action closest to plan execution state. Can use status_stamp. 
-        // Algorithm to get nearest:
-        //  Build Binary tree based on action times.
-        //  Check status (SUCCEEDED) of pos determining action (move_robot)
-        //  If true, check next execute to right
-        //  Else, check next to left
+        bool cont = true;
+        auto start_time = std::chrono::steady_clock::now();
+        auto timeout = std::chrono::seconds(5);
+        while (cont) {
+          auto elapsed = std::chrono::steady_clock::now() - start_time;
+          if (elapsed > timeout) {
+            RCLCPP_WARN(this->get_logger(), "Timeout waiting for failed joints");
+            break;
+          }
+          joints_lock.lock();
+          cont = !pause_;
+          joints_lock.unlock();
+          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+        joints_lock.lock();
+        std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
+        pause_ = pause_ ? false : pause_;
+        joints_lock.unlock();
+        std::string current_pos = getCurrentPosFromAction("execute");
+        RCLCPP_INFO(this->get_logger(), "Current position: %s", current_pos.c_str());
         for (const auto &pair : failed_joints_cp) {
           if (pair.second) {
             RCLCPP_WARN(this->get_logger(), "Failed joint: %s", pair.first.c_str());
@@ -357,17 +376,33 @@ namespace jigless_planner
             problem_expert_->removePredicate(plansys2::Predicate("(welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->removePredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
+            if (!goal_changed_) {
+              RCLCPP_INFO(this->get_logger(), "Changing reachable pos of %s", pair.first.c_str());
+              std::vector<std::string> reachable_pos = getReachablePos(pair.first);
+              if (reachable_pos.size() > 1) {
+                problem_expert_->removePredicate(plansys2::Predicate("(reachable_at " + pair.first +
+                  " " + current_pos + ")"));
+              }
+              else {
+                RCLCPP_WARN(this->get_logger(), "No additional reachable positions for joint %s",
+                  pair.first.c_str());
+                RCLCPP_WARN(this->get_logger(), "Retrying from same position");
+              }
+            }
             // Add case where goal_changed_ is checked. If no, change reachable pos. Warn if no new pos and retry from same.
             // Get reachable poses of joint via built-in method which searches through predicates.
             // Determine execute-bottom pos and remove that from joint, if alternatives are there.
           } else {
             RCLCPP_INFO(this->get_logger(), "Joint %s is ok", pair.first.c_str());
-            goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first), goal_joints.end());
+            goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first),
+              goal_joints.end());
             problem_expert_->removePredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
           }
         }
+        goal_was_changed_ = goal_changed_ ? true : false;
+        goal_changed_ = goal_changed_ ? false : goal_changed_;
         RCLCPP_INFO(this->get_logger(), "Updated predicates");
         RCLCPP_INFO(this->get_logger(), "Clearing goal for replanning under new circumstances");
         problem_expert_->clearGoal();
@@ -384,8 +419,6 @@ namespace jigless_planner
         RCLCPP_INFO(this->get_logger(), "Clearing goal");
         problem_expert_->clearGoal();
         RCLCPP_INFO(this->get_logger(), "Resetting execution status");
-        auto predicates = problem_expert_->getPredicates();
-        auto dom_preds = domain_expert_->getPredicates();
         bool success = problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
@@ -411,6 +444,62 @@ namespace jigless_planner
         break;
       }
     }
+  }
+
+  std::string TopControllerNode::getCurrentPosFromAction(const std::string & action_name) const {
+    auto last_succeeded_it = std::find_if(feedback_.rbegin(), feedback_.rend(),
+                        [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
+                        {
+                          return action.action == action_name &&
+                                action.status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED;
+                        });
+    if (last_succeeded_it == feedback_.rend()) {
+      auto first_it = std::find_if(feedback_.begin(), feedback_.end(),
+        [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action) {
+          return action.action == action_name;
+        }
+      );
+      return first_it != feedback_.end() ? first_it->arguments[0] : "";
+    }
+    auto forward_it = last_succeeded_it.base();
+    auto next_execute_it = std::find_if(forward_it, feedback_.end(),
+                      [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
+                      {
+                        return action.action == action_name;
+                      });
+    return next_execute_it != feedback_.end() ? next_execute_it->arguments[0]
+     : last_succeeded_it->arguments[0];
+  }
+
+  std::vector<std::string> TopControllerNode::getReachablePos(const std::string &joint_name) {
+    auto it = reachable_pos_map_.find(joint_name);
+    if (it != reachable_pos_map_.end()) {
+      return it->second;
+    }
+    std::vector<plansys2::Predicate> predicates = getInstancePredicates("reachable_at", joint_name);
+    std::vector<std::string> reachable_positions;
+    for (const auto &predicate : predicates) {
+      if (predicate.parameters.size() == 2) {
+        reachable_positions.push_back(predicate.parameters[1].name);
+      }
+    }
+    reachable_pos_map_[joint_name] = reachable_positions;
+    return reachable_positions;
+  }
+
+  std::vector<plansys2::Predicate> TopControllerNode::getInstancePredicates(
+    const std::string &predicate_name, const std::string &instance_name) const {
+    std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
+    auto it = predicates.begin();
+    while (it != predicates.end()) {
+      if (it->name == predicate_name &&
+          it->parameters[0].name == instance_name) {
+        ++it;
+      } else {
+        it = predicates.erase(it);
+      }
+    }
+    return predicates;
   }
 }
 
