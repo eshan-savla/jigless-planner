@@ -81,6 +81,15 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/transit.xml'
             }
         ])
+    
+    transit_dummy = Node(
+        package='jigless-planner',
+        executable='transit_dummy_node',
+        name='transit_dummy_server',
+        namespace=bottom_ns,
+        output='screen',
+        parameters=[]
+    )
 
     weld_cmd = Node(
         package='plansys2_bt_actions',
@@ -328,6 +337,7 @@ def generate_launch_description():
     ld.add_action(top_controller)
 
     ld.add_action(transit_cmd)
+    ld.add_action(transit_dummy)
     ld.add_action(weld_cmd)
     ld.add_action(validate_cmd)
     ld.add_action(command_1_cmd)

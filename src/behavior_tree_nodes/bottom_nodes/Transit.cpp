@@ -11,9 +11,14 @@ namespace jigless_planner::bottom_actions
   {
     Transit::Transit(
       const std::string & xml_tag_name,
+      const std::string & action_name,
       const BT::NodeConfiguration & conf)
-    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0), duration_(5)
+    : plansys2::BtActionNode<transit_interfaces::action::GenerateTransit>(xml_tag_name, action_name,
+      conf)
     {
+      rclcpp::Node::SharedPtr node;
+      config().blackboard->get("node", node);
+
       problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
       std::string package_name, map_file;
       if (!getInput("package_name", package_name)) {
@@ -30,7 +35,7 @@ namespace jigless_planner::bottom_actions
     {
       YAML::Node yaml_node = YAML::LoadFile(file_path);
       if (yaml_node.IsNull()) {
-        std::cerr << "Failed to load YAML file: " << file_path << std::endl;
+        RCLCPP_INFO(node_->get_logger(), "Failed to load YAML file: %s", file_path.c_str());
         return;
       }
       if(yaml_node["workpieces"]) {
@@ -59,61 +64,112 @@ namespace jigless_planner::bottom_actions
       }
     }
 
-    void
-    Transit::halt()
+    BT::NodeStatus Transit::on_tick()
     {
-      std::cout << "Transit halt" << std::endl;
-    }
-
-    BT::NodeStatus
-    Transit::tick()
-    {
-      std::string joint1;
+      std::string joint1, joint2;
       getInput<std::string>("joint1", joint1);
-      std::string joint2;
       getInput<std::string>("joint2", joint2);
-      std::stringstream out_ss;
-      if (counter_++ == 0 ) {
-        start_time_ = std::chrono::steady_clock::now();
+      if (joint1 != from_joint_ || joint2 != to_joint_) {
         updateStatus();
-        out_ss << "Transiting to " << joint2 << " from " << joint1 << std::endl;
-        if(joint_workpieces_.find(joint2) == joint_workpieces_.end()) {
-          std::cerr << "Joint " << joint2 << " not found in map";
+        from_joint_ = joint1;
+        to_joint_ = joint2;
+        if(joint_workpieces_.find(to_joint_) == joint_workpieces_.end()) {
+          RCLCPP_ERROR(node_->get_logger(), "Joint %s not found in map", to_joint_.c_str());
           return BT::NodeStatus::FAILURE;
         }
-        std::vector<std::string> pieces = joint_workpieces_.find(joint2)->second;
+        workpiece1_ = {joint_workpieces_.find(to_joint_)->second[0]};
+        workpiece2_ = {joint_workpieces_.find(to_joint_)->second[1]};
+        std::vector<std::string> pieces = joint_workpieces_.find(to_joint_)->second;
         auto it = pieces.begin();
         while (it != pieces.end()){
           std::list<std::string> fuses;
           if (workpiece_fuses_.find(*it) != workpiece_fuses_.end()) {
             fuses.insert(fuses.end(), workpiece_fuses_[*it].begin(), workpiece_fuses_[*it].end());
           }
-          out_ss << std::endl << "Moving workpieces: " << *it;
-          for (const auto & fuse : fuses) {
-            out_ss << " + " << fuse;
-            auto it2 = std::find(pieces.begin(), pieces.end(), fuse);
-            if (it2 != pieces.end())
-              pieces.erase(it2);
+          if (*it == workpiece1_[0]) {
+            workpiece1_.reserve(fuses.size() + workpiece1_.size());
+            auto it1 = fuses.begin();
+            while (it1 != fuses.end()) {
+              auto it2 = std::find(workpiece2_.begin(), workpiece2_.end(), *it1);
+              auto it3 = std::find(pieces.begin(), pieces.end(), *it1);
+              if (it2 != workpiece2_.end()) {
+                workpiece2_.erase(it2);
+                pieces.erase(it3);
+              }
+              workpiece1_.emplace_back(*it1);
+              ++it1;
+            }
+          }
+          else {
+            workpiece2_.reserve(fuses.size() + workpiece2_.size());
+            workpiece2_.insert(workpiece2_.end(), fuses.begin(), fuses.end());
           }
           it = pieces.erase(it);
         }
-        std::cout << out_ss.str() << std::endl;
-        return BT::NodeStatus::RUNNING;
       }
-      auto elapsed_time = std::chrono::steady_clock::now() - start_time_;
-      if (elapsed_time < duration_) {
-        std::cout << "Transit tick " << ++counter_ << std::endl;
-        return BT::NodeStatus::RUNNING;
-      } else {
-        counter_ = 0;
-        return BT::NodeStatus::SUCCESS;
-      }
+      goal_.from_joint = from_joint_;
+      goal_.to_joint = to_joint_;
+      goal_.workpiece1 = workpiece1_;
+      goal_.workpiece2 = workpiece2_;
+      return BT::NodeStatus::RUNNING;
     }
+
+    BT::NodeStatus Transit::on_success()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Transit success");
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    BT::NodeStatus Transit::on_cancelled()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Transit cancelled");
+      std::string joint1;
+      getInput<std::string>("joint1", joint1);
+      // Reset joint orientation as action effect and predicate undefined in this case
+      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    void Transit::cancel_goal()
+    {
+      plansys2::BtActionNode<transit_interfaces::action::GenerateTransit>::cancel_goal();
+      RCLCPP_INFO(node_->get_logger(), "Transit goal cancelled");
+      std::string joint1;
+      getInput<std::string>("joint1", joint1);
+      // Reset joint orientation as action effect and predicate undefined in this case
+      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+    }
+    
+    BT::NodeStatus Transit::on_aborted()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Transit aborted");
+      std::string joint1;
+      getInput<std::string>("joint1", joint1);
+      // Reset joint orientation as action effect and predicate undefined in this case
+      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+      return BT::NodeStatus::FAILURE;
+    }
+
+    void Transit::on_feedback(
+      const std::shared_ptr<const transit_interfaces::action::GenerateTransit::Feedback> feedback)
+    {
+      RCLCPP_INFO(node_->get_logger(), "Transit completion: %f", feedback->completion);
+    }
+
   } // namespace transit
 }  // namespace jigless_planner::bottom_actions
 
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<jigless_planner::bottom_actions::transit::Transit>("Transit");
+  BT::NodeBuilder builder =
+      [](const std::string &name, const BT::NodeConfiguration &config) {
+    return std::make_unique<jigless_planner::bottom_actions::transit::Transit>(name,
+      "generate_transit", config);
+    };
+  factory.registerBuilder<jigless_planner::bottom_actions::transit::Transit>(
+    "Transit", builder);
 }

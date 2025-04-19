@@ -23,6 +23,7 @@ find_package(plansys2_pddl_parser REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(plansys2_bt_actions REQUIRED)
 find_package(jigless_planner_interfaces REQUIRED)
+find_package(transit_interfaces REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -42,6 +43,7 @@ set(dependencies
     ament_index_cpp
     plansys2_bt_actions
     yaml_cpp_vendor
+    transit_interfaces
 )
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -94,23 +96,28 @@ ament_target_dependencies(bottom_controller_node ${dependencies} rclcpp_componen
 add_executable(top_controller_node src/TopControllerNode.cpp)
 ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components lifecycle_msgs jigless_planner_interfaces)
 
+add_executable(transit_dummy_node src/dummies/TransitDummyNode.cpp)
+ament_target_dependencies(transit_dummy_node ${dependencies})
+
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   bottom_controller_node
   top_controller_node
   execute_bottom_node
+  transit_dummy_node
   ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-# ament_python_install_package(${PROJECT_NAME})
 
 install(PROGRAMS
-  scripts/add_problem_client.py
-  DESTINATION lib/${PROJECT_NAME})
+scripts/add_problem_client.py
+DESTINATION lib/${PROJECT_NAME})
+
+# ament_python_install_package(${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
