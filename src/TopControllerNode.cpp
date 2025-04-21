@@ -440,6 +440,7 @@ namespace jigless_planner
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         state_ = READY;
         std::unique_lock<std::mutex> lock(interaction_mutex_);
+        cancel_ = false;
         lock.unlock();
         break;
       }
