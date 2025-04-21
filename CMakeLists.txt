@@ -114,7 +114,8 @@ install(TARGETS
 
 
 install(PROGRAMS
-scripts/add_problem_client.py
+scripts/add_problem_client.py 
+scripts/test2_client_node.py
 DESTINATION lib/${PROJECT_NAME})
 
 # ament_python_install_package(${PROJECT_NAME})
