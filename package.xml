@@ -30,6 +30,7 @@
   <depend>plansys2_bt_actions</depend>
 
   <depend>ament_index_cpp</depend>
+  <depend>python3-networkx</depend>
 
   <exec_depend>plansys2_bringup</exec_depend>
   <exec_depend>plansys2_terminal</exec_depend>
