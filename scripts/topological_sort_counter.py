@@ -92,7 +92,7 @@ def count_topological_sorts(dag: nx.DiGraph) -> int:
 # 🧪 Example usage
 if __name__ == "__main__":
     import os
-    pddl_file = os.path.join(os.path.dirname(__file__), "../pddl/weldcell_problem_no_workpiece.pddl")
+    pddl_file = os.path.join(os.path.dirname(__file__), "../pddl/test1/weldcell_problem_no_workpiece_1.pddl")
     with open(pddl_file, "r") as file:
         pddl_text = file.read()
     
