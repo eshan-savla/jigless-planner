@@ -119,6 +119,15 @@ def generate_launch_description():
             }
         ])
 
+    weld_dummy = Node(
+        package='jigless-planner',
+        executable='weld_dummy_node',
+        name='weld_dummy_server',
+        namespace=bottom_ns,
+        output='screen',
+        parameters=[]
+    )
+
     validate_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -132,6 +141,15 @@ def generate_launch_description():
                 'bt_xml_file': example_dir + '/behavior_trees_xml/validate.xml'
             }
         ])
+
+    validate_dummy = Node(
+        package='jigless-planner',
+        executable='validate_dummy_node',
+        name='validate_dummy_server',
+        namespace=bottom_ns,
+        output='screen',
+        parameters=[]
+    )
 
     bottom_controller = Node(
         package='jigless-planner',
@@ -362,7 +380,9 @@ def generate_launch_description():
     ld.add_action(transit_cmd)
     ld.add_action(transit_dummy)
     ld.add_action(weld_cmd)
+    ld.add_action(weld_dummy)
     ld.add_action(validate_cmd)
+    ld.add_action(validate_dummy)
     ld.add_action(command_1_cmd)
     ld.add_action(command_2_cmd)
     ld.add_action(command_3_cmd)

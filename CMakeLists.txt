@@ -99,7 +99,17 @@ add_executable(top_controller_node src/TopControllerNode.cpp)
 ament_target_dependencies(top_controller_node ${dependencies} rclcpp_components lifecycle_msgs jigless_planner_interfaces)
 
 add_executable(transit_dummy_node src/dummies/TransitDummyNode.cpp)
-ament_target_dependencies(transit_dummy_node ${dependencies})
+list(APPEND dummy_nodes transit_dummy_node)
+
+add_executable(validate_dummy_node src/dummies/ValidateDummyNode.cpp)
+list(APPEND dummy_nodes validate_dummy_node)
+
+add_executable(weld_dummy_node src/dummies/WeldDummyNode.cpp)
+list(APPEND dummy_nodes weld_dummy_node)
+
+foreach(dummy_node ${dummy_nodes})
+  ament_target_dependencies(${dummy_node} ${dependencies})
+endforeach()
 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
 
@@ -107,7 +117,7 @@ install(TARGETS
   bottom_controller_node
   top_controller_node
   execute_bottom_node
-  transit_dummy_node
+  ${dummy_nodes}
   ${plugin_libs}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
