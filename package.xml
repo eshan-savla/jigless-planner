@@ -21,6 +21,7 @@
   <depend>plansys2_msgs</depend>
   <depend>jigless_planner_interfaces</depend>
   <depend>transit_interfaces</depend>
+  <depend>weld_interfaces</depend>
 
   <depend>plansys2_domain_expert</depend>
   <depend>plansys2_executor</depend>

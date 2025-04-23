@@ -11,36 +11,45 @@ namespace jigless_planner::bottom_actions
   {
     Weld::Weld(
       const std::string & xml_tag_name,
+      const std::string & action_name,
       const BT::NodeConfiguration & conf)
-    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0), duration_(10)
+    : plansys2::BtActionNode<weld_interfaces::action::Weld>(xml_tag_name, action_name, conf)
     {
+      rclcpp::Node::SharedPtr node;
+      config().blackboard->get("node", node);
     }
 
-    void
-    Weld::halt()
-    {
-      std::cout << "Weld halt" << std::endl;
-    }
-
-    BT::NodeStatus
-    Weld::tick()
+    BT::NodeStatus Weld::on_tick()
     {
       std::string joint;
       getInput("joint", joint);
-      if (counter_ == 0) {
-        start_time_ = std::chrono::steady_clock::now();
-        std::cout << "Welding " << joint << " tick " << ++counter_ << std::endl;
-        return BT::NodeStatus::RUNNING;
-      }
-      
-      auto elapsed_time = std::chrono::steady_clock::now() - start_time_;
-      if (elapsed_time < duration_) {
-        std::cout << "Weld " << joint << " tick " << ++counter_ << std::endl;
-        return BT::NodeStatus::RUNNING;
-      } else {
-        counter_ = 0;
-        return BT::NodeStatus::SUCCESS;
-      }
+      goal_.joint = joint;
+      RCLCPP_INFO(node_->get_logger(), "Welding joint: %s", joint.c_str());
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus Weld::on_success()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Weld success");
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    BT::NodeStatus Weld::on_cancelled()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Weld cancelled");
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    BT::NodeStatus Weld::on_aborted()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Weld aborted");
+      return BT::NodeStatus::FAILURE;
+    }
+
+    void Weld::on_feedback(
+      const std::shared_ptr<const weld_interfaces::action::Weld::Feedback> feedback)
+    {
+      RCLCPP_INFO(node_->get_logger(), "Weld completion: %f", feedback->completion);
     }
   }
 }  // namespace plansys2_bt_example
@@ -48,5 +57,11 @@ namespace jigless_planner::bottom_actions
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<jigless_planner::bottom_actions::weld::Weld>("Weld");
+  BT::NodeBuilder builder =
+      [](const std::string &name, const BT::NodeConfiguration &config) {
+        return std::make_unique<jigless_planner::bottom_actions::weld::Weld>(
+          name, "weld_joint", config);
+      };
+  factory.registerBuilder<jigless_planner::bottom_actions::weld::Weld>(
+    "Weld", builder);
 }

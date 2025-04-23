@@ -24,6 +24,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(plansys2_bt_actions REQUIRED)
 find_package(jigless_planner_interfaces REQUIRED)
 find_package(transit_interfaces REQUIRED)
+find_package(weld_interfaces REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -44,6 +45,7 @@ set(dependencies
     plansys2_bt_actions
     yaml_cpp_vendor
     transit_interfaces
+    weld_interfaces
 )
 # uncomment the following section in order to fill in
 # further dependencies manually.

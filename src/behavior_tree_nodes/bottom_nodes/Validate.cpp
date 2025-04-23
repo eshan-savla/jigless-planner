@@ -11,35 +11,45 @@ namespace jigless_planner::bottom_actions
   {
     Validate::Validate(
       const std::string & xml_tag_name,
+      const std::string & action_name,
       const BT::NodeConfiguration & conf)
-    : BT::ActionNodeBase(xml_tag_name, conf), counter_(0), duration_(4)
+    : plansys2::BtActionNode<weld_interfaces::action::Validate>(xml_tag_name, action_name, conf)
     {
+      rclcpp::Node::SharedPtr node;
+      config().blackboard->get("node", node);
     }
 
-    void
-    Validate::halt()
-    {
-      std::cout << "Validate halt" << std::endl;
-    }
-
-    BT::NodeStatus
-    Validate::tick()
+    BT::NodeStatus Validate::on_tick()
     {
       std::string joint;
       getInput("joint", joint);
-      if (counter_ == 0) {
-        start_time_ = std::chrono::steady_clock::now();
-        std::cout << "Validating " << joint << " tick " << ++counter_ << std::endl;
-        return BT::NodeStatus::RUNNING;
-      }
-      auto elapsed_time = std::chrono::steady_clock::now() - start_time_;
-      if (elapsed_time < duration_) {
-        std::cout << "Validate " << joint << " tick " << ++counter_ << std::endl;
-        return BT::NodeStatus::RUNNING;
-      } else {
-        counter_ = 0;
-        return BT::NodeStatus::SUCCESS;
-      }
+      goal_.joint = joint;
+      RCLCPP_INFO(node_->get_logger(), "Validating joint: %s", joint.c_str());
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus Validate::on_success()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Validation success");
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    BT::NodeStatus Validate::on_cancelled()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Validation cancelled");
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    BT::NodeStatus Validate::on_aborted()
+    {
+      RCLCPP_INFO(node_->get_logger(), "Validation aborted");
+      return BT::NodeStatus::FAILURE;
+    }
+
+    void Validate::on_feedback(
+      const std::shared_ptr<const weld_interfaces::action::Validate::Feedback> feedback)
+    {
+      RCLCPP_INFO(node_->get_logger(), "Validation completion: %f", feedback->completion);
     }
   } // namespace weld
 }  // namespace plansys2_bt_example
@@ -47,5 +57,11 @@ namespace jigless_planner::bottom_actions
 #include "behaviortree_cpp_v3/bt_factory.h"
 BT_REGISTER_NODES(factory)
 {
-  factory.registerNodeType<jigless_planner::bottom_actions::weld::Validate>("Validate");
+  BT::NodeBuilder builder =
+      [](const std::string &name, const BT::NodeConfiguration &config) {
+        return std::make_unique<jigless_planner::bottom_actions::weld::Validate>(
+          name, "validate_joint", config);
+      };
+  factory.registerBuilder<jigless_planner::bottom_actions::weld::Validate>(
+    "Validate", builder);
 }
