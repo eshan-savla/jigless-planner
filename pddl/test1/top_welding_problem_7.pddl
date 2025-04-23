@@ -1,10 +1,31 @@
-(define (problem welding-problem)
-  (:domain welding-top)
-  (:objects
+(define (problem welding-problem) (:domain welding-top)
+(:objects
     joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
-    pos1 pos2 - position
-  )
-  (:init
+    pos1 - position
+)
+
+(:init
+    (at pos1)
+
+    (not_executed)
+
+    (not_executing)
+
+    (= (avg_joints_per_group) 10)
+
+    (depends_on joint2 joint1)
+    (depends_on joint3 joint2)
+    (depends_on joint4 joint3)
+    (reachable_at joint1 pos1)
+    (reachable_at joint2 pos1)
+    (reachable_at joint3 pos1)
+    (reachable_at joint4 pos1)
+    (reachable_at joint5 pos1)
+    (reachable_at joint6 pos1)
+    (reachable_at joint7 pos1)
+    (reachable_at joint8 pos1)
+    (reachable_at joint9 pos1)
+    (reachable_at joint10 pos1)
     (not_welded joint1)
     (not_welded joint2)
     (not_welded joint3)
@@ -15,37 +36,24 @@
     (not_welded joint8)
     (not_welded joint9)
     (not_welded joint10)
-    (reachable_at joint1 pos1)
-    (reachable_at joint2 pos1)
-    (reachable_at joint3 pos1)
-    (reachable_at joint4 pos1)
-    (reachable_at joint5 pos1)
-    (reachable_at joint6 pos1)
-    (reachable_at joint6 pos2)
-    (reachable_at joint7 pos2)
-    (reachable_at joint8 pos2)
-    (reachable_at joint9 pos2)
-    (reachable_at joint10 pos2)
-    (depends_on joint2 joint1)
-    (depends_on joint3 joint2)
-    (depends_on joint4 joint3)
-    (at pos1)
-    (not_executed)
-    (not_executing)
-    (= (avg_joints_per_group) 5)
-  )
-  ; (:goal
-  ;   (and
-  ;     (welded joint1)
-  ;     (welded joint2)
-  ;     (welded joint3)
-  ;     (welded joint4)
-  ;     (welded joint5)
-  ;     (welded joint6)
-  ;     (welded joint7)
-  ;     (welded joint8)
-  ;     (welded joint9)
-  ;     (welded joint10)
-  ;   )
-  ; )
+)
+
+; (:goal
+;     ;todo: put the goal condition here
+;     (and 
+;         (welded joint1)
+;         (welded joint2)
+;         (welded joint3)
+;         (welded joint4)
+;         (welded joint5)
+;         (welded joint6)
+;         (welded joint7)
+;         (welded joint8)
+;         (welded joint9)
+;         (welded joint10)
+;     )
+; )
+
+;un-comment the following line if metric is needed
+;(:metric minimize (???))
 )

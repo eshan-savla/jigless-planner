@@ -1,18 +1,15 @@
 (define (problem weldcell_problem_joints) (:domain weld_domain)
 (:objects
-    joint0 joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
+     joint0 joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
     ;joint0 refers to initial position/orientation and is not actually a joint
 )
 
 (:init
-    ;todo: put the initial state's facts and numeric values here
-
     (joint_orientation joint0)
 
     (depends_on joint2 joint1)
     (depends_on joint3 joint2)
     (depends_on joint4 joint3)
-
     (not_seam_measured joint1)
     (not_seam_measured joint2)
     (not_seam_measured joint3)
@@ -23,8 +20,6 @@
     (not_seam_measured joint8)
     (not_seam_measured joint9)
     (not_seam_measured joint10)
-
-
     (not_welded joint1)
     (not_welded joint2)
     (not_welded joint3)

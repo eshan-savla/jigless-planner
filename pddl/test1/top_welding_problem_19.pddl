@@ -13,14 +13,23 @@
 
     (= (avg_joints_per_group) 10)
 
-    (depends_on joint2 joint1)
-    (depends_on joint3 joint2)
-    (depends_on joint4 joint3)
-    (depends_on joint5 joint4)
-    (depends_on joint6 joint5)
-    (depends_on joint7 joint6)
-    (depends_on joint8 joint7)
-    (depends_on joint9 joint8)
+    (depends_on joint1 joint2)
+    (depends_on joint1 joint3)
+    (depends_on joint1 joint4)
+    (depends_on joint2 joint4)
+    (depends_on joint3 joint4)
+    (depends_on joint3 joint5)
+    (depends_on joint3 joint6)
+    (depends_on joint4 joint6)
+    (depends_on joint5 joint6)
+    (depends_on joint5 joint7)
+    (depends_on joint5 joint8)
+    (depends_on joint6 joint8)
+    (depends_on joint7 joint8)
+    (depends_on joint7 joint9)
+    (depends_on joint7 joint10)
+    (depends_on joint8 joint10)
+    (depends_on joint9 joint10)
     (reachable_at joint1 pos1)
     (reachable_at joint2 pos1)
     (reachable_at joint3 pos1)
@@ -43,21 +52,21 @@
     (not_welded joint10)
 )
 
-; (:goal
-;     ;todo: put the goal condition here
-;     (and 
-;         (welded joint1)
-;         (welded joint2)
-;         (welded joint3)
-;         (welded joint4)
-;         (welded joint5)
-;         (welded joint6)
-;         (welded joint7)
-;         (welded joint8)
-;         (welded joint9)
-;         (welded joint10)
-;     )
-; )
+(:goal
+    ;todo: put the goal condition here
+    (and 
+        (welded joint1)
+        (welded joint2)
+        (welded joint3)
+        (welded joint4)
+        (welded joint5)
+        (welded joint6)
+        (welded joint7)
+        (welded joint8)
+        (welded joint9)
+        (welded joint10)
+    )
+)
 
 ;un-comment the following line if metric is needed
 ;(:metric minimize (???))

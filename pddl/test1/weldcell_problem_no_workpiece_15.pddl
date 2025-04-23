@@ -1,36 +1,35 @@
-(define (problem welding-problem) (:domain welding-top)
+(define (problem weldcell_problem_joints) (:domain weld_domain)
 (:objects
-    joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
-    pos1 - position
+     joint0 joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
+    ;joint0 refers to initial position/orientation and is not actually a joint
 )
 
 (:init
-    (at pos1)
-
-    (not_executed)
-
-    (not_executing)
-
-    (= (avg_joints_per_group) 10)
+    (joint_orientation joint0)
 
     (depends_on joint2 joint1)
     (depends_on joint3 joint2)
     (depends_on joint4 joint3)
-    (depends_on joint5 joint4)
-    (depends_on joint6 joint5)
-    (depends_on joint7 joint6)
+    (depends_on joint5 joint3)
+    (depends_on joint6 joint3)
+    (depends_on joint7 joint3)
+    (depends_on joint8 joint3)
+    (depends_on joint8 joint4)
+    (depends_on joint8 joint5)
+    (depends_on joint8 joint6)
     (depends_on joint8 joint7)
     (depends_on joint9 joint8)
-    (reachable_at joint1 pos1)
-    (reachable_at joint2 pos1)
-    (reachable_at joint3 pos1)
-    (reachable_at joint4 pos1)
-    (reachable_at joint5 pos1)
-    (reachable_at joint6 pos1)
-    (reachable_at joint7 pos1)
-    (reachable_at joint8 pos1)
-    (reachable_at joint9 pos1)
-    (reachable_at joint10 pos1)
+    (depends_on joint10 joint9)
+    (not_seam_measured joint1)
+    (not_seam_measured joint2)
+    (not_seam_measured joint3)
+    (not_seam_measured joint4)
+    (not_seam_measured joint5)
+    (not_seam_measured joint6)
+    (not_seam_measured joint7)
+    (not_seam_measured joint8)
+    (not_seam_measured joint9)
+    (not_seam_measured joint10)
     (not_welded joint1)
     (not_welded joint2)
     (not_welded joint3)
