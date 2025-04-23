@@ -12,7 +12,7 @@ class TransitDummyServer : public rclcpp::Node
 {
 public:
   TransitDummyServer()
-  : Node("transit_dummy_server"), tick_(0)
+  : Node("transit_dummy_server"), tick_(0), fail_joint_(false)
   {
     this->action_server_ = rclcpp_action::create_server<GenerateTransit>(
       this,
@@ -28,8 +28,9 @@ public:
 private:
   rclcpp_action::Server<GenerateTransit>::SharedPtr action_server_;
   rclcpp::Time start_time_;
+  bool fail_joint_;
   int tick_;
-  const int duration_ = 5; // Duration in seconds
+  const int duration_ = 2; // Duration in seconds
 
   rclcpp_action::GoalResponse handle_goal(
     const rclcpp_action::GoalUUID & uuid,
@@ -103,6 +104,16 @@ private:
 
       if (elapsed_time.seconds() >= duration_) {
         break;
+      }
+
+      if (fail_joint_ && goal->to_joint == "joint6") {
+        RCLCPP_ERROR(this->get_logger(), "Transit failed to joint: %s", goal->to_joint.c_str());
+        fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        auto result = std::make_shared<GenerateTransit::Result>();
+        result->success = false;
+        goal_handle->abort(result);
+        tick_ = 0; // Reset tick counter
+        return;
       }
 
       feedback->completion = elapsed_time.seconds() / static_cast<double>(duration_);
