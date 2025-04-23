@@ -377,6 +377,7 @@ namespace jigless_planner
             problem_expert_->addPredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->removePredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
             if (!goal_changed_) {
+              problem_expert_->removePredicate(plansys2::Predicate("(commandable " + pair.first + ")"));
               RCLCPP_INFO(this->get_logger(), "Changing reachable pos of %s", pair.first.c_str());
               std::vector<std::string> reachable_pos = getReachablePos(pair.first);
               if (reachable_pos.size() > 1) {
@@ -473,16 +474,16 @@ namespace jigless_planner
   }
 
   std::vector<std::string> TopControllerNode::getReachablePos(const std::string &joint_name) {
-    auto it = reachable_pos_map_.find(joint_name);
-    if (it != reachable_pos_map_.end()) {
-      return it->second;
-    }
     std::vector<plansys2::Predicate> predicates = getInstancePredicates("reachable_at", joint_name);
     std::vector<std::string> reachable_positions;
     for (const auto &predicate : predicates) {
       if (predicate.parameters.size() == 2) {
         reachable_positions.push_back(predicate.parameters[1].name);
       }
+    }
+    auto it = reachable_pos_map_.find(joint_name);
+    if (it != reachable_pos_map_.end() && it->second.size() <= reachable_positions.size()) {
+      return it->second;
     }
     reachable_pos_map_[joint_name] = reachable_positions;
     return reachable_positions;
