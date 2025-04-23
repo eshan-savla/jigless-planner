@@ -135,6 +135,14 @@ namespace jigless_planner
     RCLCPP_INFO(this->get_logger(), "Executing goal");
     rclcpp::Rate loop_rate(1);
     const auto goal = goal_handle->get_goal();
+    if (goal->joints.joints.empty()) {
+      RCLCPP_WARN(this->get_logger(), "No joints provided in goal");
+      auto result = std::make_shared<RunBottom::Result>();
+      result->success = true;
+      result->failed_joints = get_unfinished_action_args(executor_client_->getFeedBack().action_execution_status);
+      current_goal_handle_->succeed(result);
+      return;
+    }
     std::stringstream goal_str;
     goal_str << "(:goal (and";
     switch (goal->operation)
