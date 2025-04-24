@@ -111,8 +111,8 @@ void ExecuteBottom::resultCallback(const GoalHandleRunBottom::WrappedResult & re
   for (std::size_t i = 0; i < result.result->failed_joints.joints.size(); ++i) {
     message.joints.emplace_back(std::move(result.result->failed_joints.joints[i]));
     message.status.emplace_back(std::move(result.result->failed_joints.status[i]));
-    if(!publish_msg_)
-      publish_msg_ = result.result->failed_joints.status[i];
+    // if(!publish_msg_)
+    //   publish_msg_ = result.result->failed_joints.status[i];
   }
   switch (result.code) {
     case rclcpp_action::ResultCode::SUCCEEDED:
@@ -125,10 +125,10 @@ void ExecuteBottom::resultCallback(const GoalHandleRunBottom::WrappedResult & re
       RCLCPP_WARN(this->get_logger(), "Execute Bottom canceled");
       break;
   }
-  if (publish_msg_) {
+  // if (publish_msg_) {
     joint_status_publisher_->publish(message);
     RCLCPP_INFO(this->get_logger(), "Publishing failed joint status");
-  }
+  // }
   finish(finished, 1.0, "Execute Bottom completed");
 }
 
