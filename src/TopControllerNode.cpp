@@ -243,6 +243,10 @@ namespace jigless_planner
               resetTimer(std::chrono::milliseconds(1000));
               break;
             }
+          if (get_state() != lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE) {
+            resetTimer(std::chrono::milliseconds(1000));
+            break;
+          }
           if (step_duration_ > std::chrono::milliseconds(100)) {
             resetTimer(std::chrono::milliseconds(100));
           }
@@ -349,23 +353,25 @@ namespace jigless_planner
         }
         std::unique_lock<std::mutex> joints_lock(failed_joints_mutex_);
         joints_lock.unlock();
-        bool cont = true;
         auto start_time = std::chrono::steady_clock::now();
-        auto timeout = std::chrono::seconds(5);
-        while (cont) {
+        auto timeout = std::chrono::seconds(1);
+        while (true) {
           auto elapsed = std::chrono::steady_clock::now() - start_time;
           if (elapsed > timeout) {
             RCLCPP_WARN(this->get_logger(), "Timeout waiting for failed joints");
             break;
           }
           joints_lock.lock();
-          cont = !pause_;
+          if(pause_){
+            joints_lock.unlock();
+            break;
+          }
           joints_lock.unlock();
-          std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
         joints_lock.lock();
         std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
-        pause_ = pause_ ? false : pause_;
+        pause_ = false;
         joints_lock.unlock();
         std::string current_pos = getCurrentPosFromAction("execute");
         RCLCPP_INFO(this->get_logger(), "Current position: %s", current_pos.c_str());
