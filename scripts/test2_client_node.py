@@ -15,7 +15,7 @@ class Test2ClientNode(Node):
         freq_descriptor = ParameterDescriptor(description='Frequency at which plan changes will be sent')
         self.declare_parameter('frequency', 0.05, freq_descriptor)
         duration_descriptor = ParameterDescriptor(description='Duration of the test in seconds')
-        self.declare_parameter('duration', 60, duration_descriptor)
+        self.declare_parameter('duration', 120, duration_descriptor)
         self.req = InteractTop.Request()
 
     def send_request(self):
@@ -32,14 +32,19 @@ class Test2ClientNode(Node):
         return self.send_request()
     
     def send_final_request(self):
-        self.req.joints.joints = ["joint" + str(i) for i in range(1, 11)]
-        self.req.operation = InteractTop.Request.STOP
+        self.req.joints.joints = ["joint6"]
+        self.req.operation = InteractTop.Request.REMOVE
         return self.send_request()
     
 def main(args=None):
     rclpy.init(args=args)
     test2_client_node = Test2ClientNode()
     
+    def shutdown_callback():
+        test2_client_node.get_logger().info('Shutting down...')
+        test2_client_node.destroy_node()
+        rclpy.shutdown()
+
     # Send initial request
     test2_client_node.get_logger().info('Sending initial request...')
     future = test2_client_node.send_initial_request()
@@ -49,7 +54,7 @@ def main(args=None):
         test2_client_node.get_logger().info('Initial request successful')
     else:
         test2_client_node.get_logger().info(f'Initial request failed: {response.error_info}') 
-        return
+        return shutdown_callback()
     test2_client_node.get_logger().info('Initial request completed, waiting for 10 seconds...')
     test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds=10.0))
 
@@ -73,11 +78,21 @@ def main(args=None):
             test2_client_node.get_logger().info(f'request {operation} successful')
         else:
             test2_client_node.get_logger().info(f'request {operation} failed')
-            return
+            return shutdown_callback()
         operation += delta
         delta *= -1
         test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds= 1.0 / freq))
     
+    # Send final request
+    test2_client_node.get_logger().info('Sending final request...')
+    future = test2_client_node.send_final_request()
+    rclpy.spin_until_future_complete(test2_client_node, future)
+    response = future.result()
+    if response.success:
+        test2_client_node.get_logger().info('Final request successful')
+    else:
+        test2_client_node.get_logger().info(f'Final request failed: {response.error_info}') 
+        return shutdown_callback()
     test2_client_node.destroy_node()
     rclpy.shutdown()
 
