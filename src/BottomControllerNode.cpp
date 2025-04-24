@@ -284,7 +284,9 @@ namespace jigless_planner
     RCLCPP_INFO(this->get_logger(), "Deactivated bottom controller node");
   }
 
-  void BottomControllerNode::resolve_critical_predicates(const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &result)
+  void BottomControllerNode::resolve_critical_predicates(
+    const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &result,
+    const std::string &action_name)
   {
     // Idea is to check if an instance of critical predicates exist.
     // That means, the predicates set in the effects of the action need to be checked
@@ -303,44 +305,132 @@ namespace jigless_planner
     // 1. Method to determine actions which have critical predicates (optional)
     // 2. Method to determine critical predicates of an action. (Should be utilised by method above outside this function)
 
-    
-
+    //%TODO: Identify all actions with critical predicates and store them during configuration instead of here.
+    std::vector<std::string> critical_predicates = get_critical_predicates(action_name);
+    if (critical_predicates.empty()) {
+      RCLCPP_ERROR(this->get_logger(), "No critical predicates found");
+      return;
+    }
     //Temp to check if this solution is worth it:
     std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
-    for (const auto &predicate : predicates) {
-      if (predicate.name == "joint_orientation") {
-        RCLCPP_INFO(this->get_logger(), "Predicate with name 'joint_orientation' found. Exiting method.");
-        return;
+    for (const auto &critical_predicate : critical_predicates) {
+      for (const auto &predicate : predicates) {
+        if (predicate.name == critical_predicate) {
+          RCLCPP_INFO(this->get_logger(), "Predicate %s found.", predicate.name.c_str());
+          continue;
+        }
+      }
+      std::string joint;
+      auto rit = result.rbegin();
+      while (rit != result.rend()) {
+        if (rit->action == action_name && rit->status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED) {
+          joint = rit->arguments[1];
+          break;
+        }
+        ++rit;
+      }
+      if (rit == result.rend()) {
+        RCLCPP_ERROR(this->get_logger(), "No successful %s action found", action_name.c_str());
+        RCLCPP_WARN(this->get_logger(), "Using first %s action", action_name.c_str());
+        auto it = std::find_if(result.begin(), result.end(),
+          [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
+          { return action.action == action_name; });
+        if (it == result.end()) {
+          RCLCPP_ERROR(this->get_logger(), "No transit action found");
+          return;
+        }
+        joint = it->arguments[0];
+      }
+      std::string predicate = "(" + critical_predicate + " " + joint + ")";
+      bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
+      if (!exist_predicate) {
+        RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
+        problem_expert_->addPredicate(plansys2::Predicate(predicate));
+      } else {
+        RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
       }
     }
-    std::string joint;
-    auto rit = result.rbegin();
-    while (rit != result.rend()) {
-      if (rit->action == "transit" && rit->status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED) {
-        joint = rit->arguments[1];
-        break;
-      }
-      ++rit;
+  }
+
+  std::vector<std::string> jigless_planner::BottomControllerNode::get_critical_predicates(
+    const std::string &action_name)
+  {
+    // Get effects of the action
+    // Memoize the action name and the critical predicates
+    // Determine if action has at start and at end effects
+    // If no, return empty vector
+    // If yes, check for similar, negated pair of each predicate in at start
+      // How:
+      // 1. Get all at start effects of action
+      // Ignore/Skip "and"
+      // 2. Get ground predicate ideally through recursive function.
+      // Function should also return if predicate is negated or not
+      // 3. Check if predicate exists in the action at end effects
+      // 4. Check if it is the inverse of at start effect
+      // 5. If yes, add to vector
+    
+    if (critical_action_preds_.find(action_name) != critical_action_preds_.end()) {
+      return critical_action_preds_[action_name];
     }
-    if (rit == result.rend()) {
-      RCLCPP_ERROR(this->get_logger(), "No successful transit action found");
-      RCLCPP_WARN(this->get_logger(), "Using first transit action");
-      auto it = std::find_if(result.begin(), result.end(),
-        [](const plansys2_msgs::msg::ActionExecutionInfo &action)
-        { return action.action == "transit"; });
-      if (it == result.end()) {
-        RCLCPP_ERROR(this->get_logger(), "No transit action found");
-        return;
-      }
-      joint = it->arguments[0];
+    auto action = domain_expert_->getDurativeAction(action_name);
+    if (action == nullptr) {
+      RCLCPP_ERROR(this->get_logger(), "Action %s not found", action_name.c_str());
+      return std::vector<std::string>();
     }
-    std::string predicate = "(joint_orientation " + joint + ")";
-    bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
-    if (!exist_predicate) {
-      RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
-      problem_expert_->addPredicate(plansys2::Predicate(predicate));
-    } else {
-      RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
+    std::unordered_map<std::string, bool> grounded_at_start;
+    std::unordered_set<int> visited_ids_start;
+    find_grounded_predicates(action->at_start_effects.nodes, 0, grounded_at_start, visited_ids_start, false);
+    std::unordered_map<std::string, bool> grounded_at_end;
+    std::unordered_set<int> visited_ids_end;
+    find_grounded_predicates(action->at_end_effects.nodes, 0, grounded_at_end, visited_ids_end, false);
+    std::vector<std::string> critical_predicates;
+    for (const auto &predicate : grounded_at_start) {
+      auto it = grounded_at_end.find(predicate.first);
+      if (it != grounded_at_end.end())
+      {
+        if (predicate.second != it->second) {
+          critical_predicates.push_back(predicate.first);
+        }
+      }
+    }
+    critical_action_preds_[action_name] = critical_predicates;
+    return critical_predicates;
+  }
+
+  void jigless_planner::BottomControllerNode::find_grounded_predicates(
+    const std::vector<plansys2_msgs::msg::Node> &effects, const int &id,
+    std::unordered_map<std::string, bool> &grounded_predicates,
+    std::unordered_set<int> &visited_ids, const bool &negate)
+  {
+    // POA:
+    // 1. Check if effects is empty, if yes, return
+    // 2. Loop through effects:
+      // 1. Check if effect is "and", call function recursively on children
+      // 2. Check if effect is "not", call function recursively on children and set negate to true
+      // 3. Check if effect is grounded, if yes, add to grounded_predicates with negate value.
+
+    if (effects.empty()) {
+      return;
+    }
+    for (int i = id; i < effects.size(); ++i)
+    {
+      if (visited_ids.find(effects.at(i).node_id) != visited_ids.end()) {
+        continue;
+      }
+      visited_ids.insert(effects.at(i).node_id);
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::AND) {
+        for (const auto &child : effects.at(i).children) {
+          find_grounded_predicates(effects, child, grounded_predicates, visited_ids, negate);
+        }
+      }
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::NOT) {
+        for (const auto &child : effects.at(i).children) {
+          find_grounded_predicates(effects, child, grounded_predicates, visited_ids, true);
+        }
+      }
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::PREDICATE) {
+        grounded_predicates[effects.at(i).name] = negate;
+      }
     }
   }
 

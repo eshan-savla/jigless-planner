@@ -64,6 +64,7 @@ namespace jigless_planner
     rclcpp::CallbackGroup::SharedPtr service_group_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::shared_ptr<GoalHandleRunBottom> current_goal_handle_;
+    std::unordered_map<std::string, std::vector<std::string>> critical_action_preds_;
 
     void init();
     bool init_knowledge();
@@ -83,8 +84,12 @@ namespace jigless_planner
     void check_action();
     void deactivate_node();
     void resolve_critical_predicates(
-      const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result);
+      const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result,
+      const std::string & action_name = "transit");
     std::vector<std::string> get_critical_predicates(const std::string & action_name);
+    void find_grounded_predicates(const std::vector<plansys2_msgs::msg::Node> & effects,
+      const int & id, std::unordered_map<std::string, bool> & grounded_predicates,
+      std::unordered_set<int> &visited_ids, const bool & negate = false);
 
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;
