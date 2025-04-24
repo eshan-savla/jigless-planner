@@ -82,6 +82,9 @@ namespace jigless_planner
     void execute(const std::shared_ptr<GoalHandleRunBottom> goal_handle);
     void check_action();
     void deactivate_node();
+    void resolve_critical_predicates(
+      const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result);
+    std::vector<std::string> get_critical_predicates(const std::string & action_name);
 
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;

@@ -230,6 +230,8 @@ namespace jigless_planner
       result->success = false;
       result->failed_joints = get_unfinished_action_args(executor_client_->getFeedBack().action_execution_status);
       current_goal_handle_->canceled(result);
+      resolve_critical_predicates(executor_client_->getFeedBack().action_execution_status);
+      // Check if critical predicates are set based on action.
       started_ = false;
       cancel_ = false;
       return;
@@ -279,9 +281,70 @@ namespace jigless_planner
     interim_goal_ = problem_expert_->getGoal();
     // Clear goal
     problem_expert_->clearGoal(); // Should it though?
+    RCLCPP_INFO(this->get_logger(), "Deactivated bottom controller node");
   }
 
-  CallbackReturnT BottomControllerNode::on_cleanup(const rclcpp_lifecycle::State & previous_state)
+  void BottomControllerNode::resolve_critical_predicates(const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &result)
+  {
+    // Idea is to check if an instance of critical predicates exist.
+    // That means, the predicates set in the effects of the action need to be checked
+    // If no instance of it exists, then valid one should be created.
+
+    // How to do:
+    // Critical predicates: removed at start and set at end or vice versa
+    // Determine the action for which critical predicates exist (Ideally, this should be done once in the beginning and stored)
+    // ALTERNATIVE FOR TEMP: Action is known, just determine which is the critical predicate for that action.
+    // Determine first successful instance of action and determine the status of the critical predicate
+    // Store the effect/corresponding predicate.
+    // If this predicate is set/exists, finish and exit method.
+    // Else, set this predicate and finish.
+
+    // Method division:
+    // 1. Method to determine actions which have critical predicates (optional)
+    // 2. Method to determine critical predicates of an action. (Should be utilised by method above outside this function)
+
+    
+
+    //Temp to check if this solution is worth it:
+    std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
+    for (const auto &predicate : predicates) {
+      if (predicate.name == "joint_orientation") {
+        RCLCPP_INFO(this->get_logger(), "Predicate with name 'joint_orientation' found. Exiting method.");
+        return;
+      }
+    }
+    std::string joint;
+    auto rit = result.rbegin();
+    while (rit != result.rend()) {
+      if (rit->action == "transit" && rit->status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED) {
+        joint = rit->arguments[1];
+        break;
+      }
+      ++rit;
+    }
+    if (rit == result.rend()) {
+      RCLCPP_ERROR(this->get_logger(), "No successful transit action found");
+      RCLCPP_WARN(this->get_logger(), "Using first transit action");
+      auto it = std::find_if(result.begin(), result.end(),
+        [](const plansys2_msgs::msg::ActionExecutionInfo &action)
+        { return action.action == "transit"; });
+      if (it == result.end()) {
+        RCLCPP_ERROR(this->get_logger(), "No transit action found");
+        return;
+      }
+      joint = it->arguments[0];
+    }
+    std::string predicate = "(joint_orientation " + joint + ")";
+    bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
+    if (!exist_predicate) {
+      RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
+      problem_expert_->addPredicate(plansys2::Predicate(predicate));
+    } else {
+      RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
+    }
+  }
+
+  CallbackReturnT BottomControllerNode::on_cleanup(const rclcpp_lifecycle::State &previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Cleaning up bottom controller node");
     std::unique_lock<std::mutex> lock(activated_mutex_);
