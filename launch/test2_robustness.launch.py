@@ -405,5 +405,5 @@ def generate_launch_description():
     ld.add_action(set_status_5_cmd)
     ld.add_action(execute_bottom_cmd)
 
-    ld.add_action(test_launch_service)
+    # ld.add_action(test_launch_service)
     return ld
