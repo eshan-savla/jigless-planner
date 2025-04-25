@@ -311,11 +311,16 @@ namespace jigless_planner
     //Temp to check if this solution is worth it:
     std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
     for (const auto &critical_predicate : critical_predicates) {
+      bool cont = false;
       for (const auto &predicate : predicates) {
         if (predicate.name == critical_predicate) {
           RCLCPP_INFO(this->get_logger(), "Predicate %s found.", predicate.name.c_str());
-          continue;
+          cont = true;
+          break;
         }
+      }
+      if (cont) {
+        continue;
       }
       std::string joint;
       auto rit = result.rbegin();
