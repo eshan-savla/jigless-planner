@@ -123,11 +123,11 @@ namespace jigless_planner::bottom_actions
     BT::NodeStatus Transit::on_cancelled()
     {
       RCLCPP_INFO(node_->get_logger(), "Transit cancelled");
-      std::string joint1;
-      getInput<std::string>("joint1", joint1);
-      // Reset joint orientation as action effect and predicate undefined in this case
-      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
-      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+      // std::string joint1;
+      // getInput<std::string>("joint1", joint1);
+      // // Reset joint orientation as action effect and predicate undefined in this case
+      // RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      // problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
       return BT::NodeStatus::SUCCESS;
     }
 
@@ -135,21 +135,21 @@ namespace jigless_planner::bottom_actions
     {
       plansys2::BtActionNode<transit_interfaces::action::GenerateTransit>::cancel_goal();
       RCLCPP_INFO(node_->get_logger(), "Transit goal cancelled");
-      std::string joint1;
-      getInput<std::string>("joint1", joint1);
-      // Reset joint orientation as action effect and predicate undefined in this case
-      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
-      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+      // std::string joint1;
+      // getInput<std::string>("joint1", joint1);
+      // // Reset joint orientation as action effect and predicate undefined in this case
+      // RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      // problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
     }
     
     BT::NodeStatus Transit::on_aborted()
     {
       RCLCPP_INFO(node_->get_logger(), "Transit aborted");
-      std::string joint1;
-      getInput<std::string>("joint1", joint1);
-      // Reset joint orientation as action effect and predicate undefined in this case
-      RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
-      problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
+      // std::string joint1;
+      // getInput<std::string>("joint1", joint1);
+      // // Reset joint orientation as action effect and predicate undefined in this case
+      // RCLCPP_INFO(node_->get_logger(), "Resetting joint orientation to %s", joint1.c_str());
+      // problem_expert_->addPredicate(plansys2::Predicate("(joint_orientation " + joint1 + ")"));
       return BT::NodeStatus::FAILURE;
     }
 
