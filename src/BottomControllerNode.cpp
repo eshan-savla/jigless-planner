@@ -86,9 +86,10 @@ namespace jigless_planner
   {
     std::lock_guard<std::mutex> lock(activated_mutex_);
     RCLCPP_INFO(this->get_logger(), "Activating bottom controller node");
-    LifecycleNode::on_activate(previous_state);
-    activated_ = true;
-    return CallbackReturnT::SUCCESS;
+    auto return_status = LifecycleNode::on_activate(previous_state);
+    if (return_status == CallbackReturnT::SUCCESS)
+      activated_ = true;
+    return return_status;
   }
 
   rclcpp_action::GoalResponse BottomControllerNode::handle_goal(
@@ -259,8 +260,8 @@ namespace jigless_planner
   {
     RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller node");
     std::thread(std::bind(&BottomControllerNode::deactivate_node, this)).detach();
-    LifecycleNode::on_deactivate(previous_state);
-    return CallbackReturnT::SUCCESS;
+    return LifecycleNode::on_deactivate(previous_state);
+    // return CallbackReturnT::SUCCESS;
   }
 
   void BottomControllerNode::deactivate_node()
