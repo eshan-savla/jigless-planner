@@ -82,10 +82,6 @@ namespace jigless_planner
     return false;
   };
 
-  bool BottomControllerNode::response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future)
-  {
-  };
-
   CallbackReturnT BottomControllerNode::on_activate(const rclcpp_lifecycle::State & previous_state)
   {
     std::lock_guard<std::mutex> lock(activated_mutex_);
