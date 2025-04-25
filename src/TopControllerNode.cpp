@@ -112,10 +112,11 @@ namespace jigless_planner
   void TopControllerNode::jointCallback(const jigless_planner_interfaces::msg::JointStatus &msg)
   {
     std::lock_guard<std::mutex> lock(failed_joints_mutex_);
-    RCLCPP_WARN(this->get_logger(), "Some joints failed to weld");
     for (std::size_t i = 0; i < msg.joints.size(); ++i) {
       if (!pause_)
         pause_ = msg.status[i];
+      else
+        RCLCPP_WARN(this->get_logger(), "Some joints failed to weld");
       failed_joints[msg.joints[i]] = msg.status[i];
     }
     pause_ = pause_ && !goal_was_changed_ ? pause_ : false;
@@ -373,6 +374,7 @@ namespace jigless_planner
         std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
         pause_ = false;
         joints_lock.unlock();
+        resolve_critical_predicates(feedback_);
         std::string current_pos = getCurrentPosFromAction("execute");
         RCLCPP_INFO(this->get_logger(), "Current position: %s", current_pos.c_str());
         for (const auto &pair : failed_joints_cp) {
@@ -508,6 +510,162 @@ namespace jigless_planner
       }
     }
     return predicates;
+  }
+
+  void TopControllerNode::resolve_critical_predicates(
+    const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &result,
+    const std::string &action_name)
+  {
+    // Idea is to check if an instance of critical predicates exist.
+    // That means, the predicates set in the effects of the action need to be checked
+    // If no instance of it exists, then valid one should be created.
+
+    // How to do:
+    // Critical predicates: removed at start and set at end or vice versa
+    // Determine the action for which critical predicates exist (Ideally, this should be done once in the beginning and stored)
+    // ALTERNATIVE FOR TEMP: Action is known, just determine which is the critical predicate for that action.
+    // Determine first successful instance of action and determine the status of the critical predicate
+    // Store the effect/corresponding predicate.
+    // If this predicate is set/exists, finish and exit method.
+    // Else, set this predicate and finish.
+
+    // Method division:
+    // 1. Method to determine actions which have critical predicates (optional)
+    // 2. Method to determine critical predicates of an action. (Should be utilised by method above outside this function)
+
+    //%TODO: Identify all actions with critical predicates and store them during configuration instead of here.
+    std::vector<std::string> critical_predicates = get_critical_predicates(action_name);
+    if (critical_predicates.empty()) {
+      RCLCPP_ERROR(this->get_logger(), "No critical predicates found");
+      return;
+    }
+    //Temp to check if this solution is worth it:
+    std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
+    for (const auto &critical_predicate : critical_predicates) {
+      bool cont = false;
+      for (const auto &predicate : predicates)
+      {
+        if (predicate.name == critical_predicate) {
+          RCLCPP_INFO(this->get_logger(), "Predicate %s found.", predicate.name.c_str());
+          cont = true;
+          break;
+        }
+      }
+      if (cont) {
+        continue;
+      }
+      std::string param;
+      auto rit = result.rbegin();
+      while (rit != result.rend()) {
+        if (rit->action == action_name && rit->status == plansys2_msgs::msg::ActionExecutionInfo::SUCCEEDED) {
+          param = rit->arguments[1];
+          break;
+        }
+        ++rit;
+      }
+      if (rit == result.rend()) {
+        RCLCPP_ERROR(this->get_logger(), "No successful %s action found", action_name.c_str());
+        RCLCPP_WARN(this->get_logger(), "Using first %s action", action_name.c_str());
+        auto it = std::find_if(result.begin(), result.end(),
+          [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
+          { return action.action == action_name; });
+        if (it == result.end()) {
+          RCLCPP_ERROR(this->get_logger(), "No transit action found");
+          return;
+        }
+        param = it->arguments[0];
+      }
+      std::string predicate = "(" + critical_predicate + " " + param + ")";
+      bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
+      if (!exist_predicate) {
+        RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
+        problem_expert_->addPredicate(plansys2::Predicate(predicate));
+      } else {
+        RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
+      }
+    }
+  }
+
+  std::vector<std::string> jigless_planner::TopControllerNode::get_critical_predicates(
+    const std::string &action_name)
+  {
+    // Get effects of the action
+    // Memoize the action name and the critical predicates
+    // Determine if action has at start and at end effects
+    // If no, return empty vector
+    // If yes, check for similar, negated pair of each predicate in at start
+      // How:
+      // 1. Get all at start effects of action
+      // Ignore/Skip "and"
+      // 2. Get ground predicate ideally through recursive function.
+      // Function should also return if predicate is negated or not
+      // 3. Check if predicate exists in the action at end effects
+      // 4. Check if it is the inverse of at start effect
+      // 5. If yes, add to vector
+    
+    if (critical_action_preds_.find(action_name) != critical_action_preds_.end()) {
+      return critical_action_preds_[action_name];
+    }
+    auto action = domain_expert_->getDurativeAction(action_name);
+    if (action == nullptr) {
+      RCLCPP_ERROR(this->get_logger(), "Action %s not found", action_name.c_str());
+      return std::vector<std::string>();
+    }
+    std::unordered_map<std::string, bool> grounded_at_start;
+    std::unordered_set<int> visited_ids_start;
+    find_grounded_predicates(action->at_start_effects.nodes, 0, grounded_at_start, visited_ids_start, false);
+    std::unordered_map<std::string, bool> grounded_at_end;
+    std::unordered_set<int> visited_ids_end;
+    find_grounded_predicates(action->at_end_effects.nodes, 0, grounded_at_end, visited_ids_end, false);
+    std::vector<std::string> critical_predicates;
+    for (const auto &predicate : grounded_at_start) {
+      auto it = grounded_at_end.find(predicate.first);
+      if (it != grounded_at_end.end())
+      {
+        if (predicate.second != it->second) {
+          critical_predicates.push_back(predicate.first);
+        }
+      }
+    }
+    critical_action_preds_[action_name] = critical_predicates;
+    return critical_predicates;
+  }
+
+  void jigless_planner::TopControllerNode::find_grounded_predicates(
+    const std::vector<plansys2_msgs::msg::Node> &effects, const int &id,
+    std::unordered_map<std::string, bool> &grounded_predicates,
+    std::unordered_set<int> &visited_ids, const bool &negate)
+  {
+    // POA:
+    // 1. Check if effects is empty, if yes, return
+    // 2. Loop through effects:
+      // 1. Check if effect is "and", call function recursively on children
+      // 2. Check if effect is "not", call function recursively on children and set negate to true
+      // 3. Check if effect is grounded, if yes, add to grounded_predicates with negate value.
+
+    if (effects.empty()) {
+      return;
+    }
+    for (int i = id; i < effects.size(); ++i)
+    {
+      if (visited_ids.find(effects.at(i).node_id) != visited_ids.end()) {
+        continue;
+      }
+      visited_ids.insert(effects.at(i).node_id);
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::AND) {
+        for (const auto &child : effects.at(i).children) {
+          find_grounded_predicates(effects, child, grounded_predicates, visited_ids, negate);
+        }
+      }
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::NOT) {
+        for (const auto &child : effects.at(i).children) {
+          find_grounded_predicates(effects, child, grounded_predicates, visited_ids, true);
+        }
+      }
+      if (effects.at(i).node_type == plansys2_msgs::msg::Node::PREDICATE) {
+        grounded_predicates[effects.at(i).name] = negate;
+      }
+    }
   }
 }
 

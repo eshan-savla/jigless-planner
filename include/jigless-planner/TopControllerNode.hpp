@@ -91,9 +91,18 @@ namespace jigless_planner
     // bool response_callback(rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedFuture future);
     // void get_state_callback(rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedFuture future);
     // void set_state_callback(rclcpp::Client<lifecycle_msgs::srv::ChangeState>::SharedFuture future);
+    std::unordered_map<std::string, std::vector<std::string>> critical_action_preds_;
     
     unsigned int get_state();
     bool set_state(unsigned int state);
+
+    void resolve_critical_predicates(
+      const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & result,
+      const std::string & action_name = "move_robot");
+    std::vector<std::string> get_critical_predicates(const std::string & action_name);
+    void find_grounded_predicates(const std::vector<plansys2_msgs::msg::Node> & effects,
+      const int & id, std::unordered_map<std::string, bool> & grounded_predicates,
+      std::unordered_set<int> &visited_ids, const bool & negate = false);
   };
 }
 
