@@ -51,6 +51,7 @@ namespace jigless_planner
 
   private:
     bool activated_ = false, started_ = false, cancel_ = false;
+    std::vector<std::string> expected_crit_preds_;
     std::mutex activated_mutex_;
     plansys2::Goal interim_goal_;
     std::shared_ptr<plansys2::DomainExpertClient> domain_expert_;
@@ -89,7 +90,7 @@ namespace jigless_planner
     void find_grounded_predicates(const std::vector<plansys2_msgs::msg::Node> & effects,
       const int & id, std::unordered_map<std::string, bool> & grounded_predicates,
       std::unordered_set<int> &visited_ids, const bool & negate = false);
-
+    void patch_missing_predicates();
     CallbackReturnT on_configure(
         const rclcpp_lifecycle::State &previous_state) override;
     CallbackReturnT on_activate(

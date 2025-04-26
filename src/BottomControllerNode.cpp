@@ -195,7 +195,7 @@ namespace jigless_planner
         break;
     }
     goal_str << "))";
-
+    patch_missing_predicates();
     problem_expert_->setGoal(plansys2::Goal(goal_str.str()));
 
     auto domain = domain_expert_->getDomain();
@@ -221,13 +221,14 @@ namespace jigless_planner
     auto feedback = std::make_shared<RunBottom::Feedback>();
     auto result = std::make_shared<RunBottom::Result>();
 
-    if (cancel_) {
+    if (current_goal_handle_->is_canceling()) {
       RCLCPP_INFO(this->get_logger(), "Cancelling goal");
       executor_client_->cancel_plan_execution();
       result->success = false;
+      std::this_thread::sleep_for(std::chrono::seconds(1));
       result->failed_joints = get_unfinished_action_args(executor_client_->getFeedBack().action_execution_status);
-      current_goal_handle_->canceled(result);
       resolve_critical_predicates(executor_client_->getFeedBack().action_execution_status);
+      current_goal_handle_->canceled(result);
       // Check if critical predicates are set based on action.
       started_ = false;
       cancel_ = false;
@@ -281,6 +282,38 @@ namespace jigless_planner
     RCLCPP_INFO(this->get_logger(), "Deactivated bottom controller node");
   }
 
+  void jigless_planner::BottomControllerNode::patch_missing_predicates()
+  {
+    // Necessary as some BT nodes are initialised and cancelled immediately after critical predicates are resolved.
+    if (expected_crit_preds_.empty()) {
+      RCLCPP_INFO(this->get_logger(), "No expected critical predicates found");
+      return;
+    }
+    std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
+    for (const auto &predicate : expected_crit_preds_) {
+      bool cont = false;
+      for (const auto &pred : predicates) {
+        // std::string predicate_name = predicate.substr(1, predicate.find(" ") - 1);
+        if (predicate.substr(1, predicate.find(" ", 2) - 1) == pred.name) {
+          RCLCPP_INFO(this->get_logger(), "Predicate %s found.", pred.name.c_str());
+          cont = true;
+          break;
+        }
+      }
+      if (cont) {
+        continue;
+      }
+      bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
+      if (!exist_predicate) {
+        RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
+        problem_expert_->addPredicate(plansys2::Predicate(predicate));
+      } else {
+        RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
+      }
+    }
+    expected_crit_preds_.clear();
+  }
+  
   void BottomControllerNode::resolve_critical_predicates(
     const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &result,
     const std::string &action_name)
@@ -308,20 +341,21 @@ namespace jigless_planner
       RCLCPP_ERROR(this->get_logger(), "No critical predicates found");
       return;
     }
-    //Temp to check if this solution is worth it:
-    std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
+    assert(expected_crit_preds_.empty());
+    // // Temp to check if this solution is worth it:
+    // std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
     for (const auto &critical_predicate : critical_predicates) {
-      bool cont = false;
-      for (const auto &predicate : predicates) {
-        if (predicate.name == critical_predicate) {
-          RCLCPP_INFO(this->get_logger(), "Predicate %s found.", predicate.name.c_str());
-          cont = true;
-          break;
-        }
-      }
-      if (cont) {
-        continue;
-      }
+      // bool cont = false;
+      // for (const auto &predicate : predicates) {
+      //   if (predicate.name == critical_predicate) {
+      //     RCLCPP_INFO(this->get_logger(), "Predicate %s found.", predicate.name.c_str());
+      //     cont = true;
+      //     break;
+      //   }
+      // }
+      // if (cont) {
+      //   continue;
+      // }
       std::string joint;
       auto rit = result.rbegin();
       while (rit != result.rend()) {
@@ -338,19 +372,20 @@ namespace jigless_planner
           [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
           { return action.action == action_name; });
         if (it == result.end()) {
-          RCLCPP_ERROR(this->get_logger(), "No transit action found");
+          RCLCPP_ERROR(this->get_logger(), "No %s action found", action_name.c_str());
           return;
         }
         joint = it->arguments[0];
       }
       std::string predicate = "(" + critical_predicate + " " + joint + ")";
-      bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
-      if (!exist_predicate) {
-        RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
-        problem_expert_->addPredicate(plansys2::Predicate(predicate));
-      } else {
-        RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
-      }
+      expected_crit_preds_.push_back(predicate);
+      // bool exist_predicate = problem_expert_->existPredicate(plansys2::Predicate(predicate));
+      // if (!exist_predicate) {
+      //   RCLCPP_INFO(this->get_logger(), "Setting critical predicate %s", predicate.c_str());
+      //   problem_expert_->addPredicate(plansys2::Predicate(predicate));
+      // } else {
+      //   RCLCPP_INFO(this->get_logger(), "Critical predicate %s already exists", predicate.c_str());
+      // }
     }
   }
 
