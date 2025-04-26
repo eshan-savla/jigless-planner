@@ -37,6 +37,7 @@ namespace jigless_planner
 
   private:
     bool goal_changed_ = false, pause_ = false, cancel_ = false, goal_was_changed_ = false;
+    std::vector<std::string> expected_crit_preds_;
     std::vector<std::string> goal_joints;
     std::map<std::string, bool> failed_joints;
     std::unordered_map<std::string, std::vector<std::string>> reachable_pos_map_;
@@ -103,6 +104,8 @@ namespace jigless_planner
     void find_grounded_predicates(const std::vector<plansys2_msgs::msg::Node> & effects,
       const int & id, std::unordered_map<std::string, bool> & grounded_predicates,
       std::unordered_set<int> &visited_ids, const bool & negate = false);
+    void patch_missing_predicates();
+    
   };
 }
 
