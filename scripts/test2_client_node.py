@@ -12,10 +12,12 @@ class Test2ClientNode(Node):
         while not self.cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Service not available, waiting again...')
         from rcl_interfaces.msg import ParameterDescriptor
-        period_descriptor = ParameterDescriptor(description='Period at which plan changes will be sent')
-        self.declare_parameter('period', 20.0, period_descriptor)
+        freq_descriptor = ParameterDescriptor(description='Frequency at which plan changes will be sent')
+        self.declare_parameter('frequency', 0.05, freq_descriptor)
         duration_descriptor = ParameterDescriptor(description='Duration of the test in seconds')
         self.declare_parameter('duration', 120, duration_descriptor)
+        delay_descriptor = ParameterDescriptor(description='Delay until test start in seconds (int)')
+        self.declare_parameter('delay', 10, delay_descriptor)
         self.req = InteractTop.Request()
 
     def send_request(self):
@@ -55,16 +57,18 @@ def main(args=None):
     else:
         test2_client_node.get_logger().info(f'Initial request failed: {response.error_info}')
         return shutdown_callback()
-    test2_client_node.get_logger().info('Initial request completed, waiting for 10 seconds...')
-    test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds=10.0))
+    delay = test2_client_node.get_parameter('delay').get_parameter_value().integer_value
+    test2_client_node.get_logger().info(f'Initial request completed, waiting for {delay} seconds...')
+    test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds=delay))
 
     # Start the test
-    period = test2_client_node.get_parameter('period').get_parameter_value().double_value
+    freq = test2_client_node.get_parameter('frequency').get_parameter_value().double_value
     start_time = test2_client_node.get_clock().now()
     duration = test2_client_node.get_parameter('duration').get_parameter_value().integer_value
     test2_client_node.get_logger().info('Starting test...')
     operation = InteractTop.Request.ADD
     delta = 1
+    counter = 0
     while True:
         elapsed_time = test2_client_node.get_clock().now() - start_time
         if elapsed_time.nanoseconds >= duration * 1e9:
@@ -76,14 +80,16 @@ def main(args=None):
         response = future.result()
         if response.success:
             test2_client_node.get_logger().info(f'request {operation} successful')
+            counter += 1
         else:
             test2_client_node.get_logger().info(f'request {operation} failed')
             return shutdown_callback()
         operation += delta # As the operation needs to be switched between ADD and REMOVE
         delta *= -1 # As the operation needs to be switched between ADD and REMOVE
-        test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds=period))
+        test2_client_node.get_clock().sleep_for(rclpy.duration.Duration(seconds=1.0/freq))
     
     # Send final request
+    test2_client_node.get_logger().info(f"Test ran for {elapsed_time.nanoseconds / 1e9:.2f} seconds")
     test2_client_node.get_logger().info('Sending final request...')
     future = test2_client_node.send_final_request()
     rclpy.spin_until_future_complete(test2_client_node, future)
@@ -93,8 +99,8 @@ def main(args=None):
     else:
         test2_client_node.get_logger().info(f'Final request failed: {response.error_info}')
         return shutdown_callback()
-    test2_client_node.destroy_node()
-    rclpy.shutdown()
+    test2_client_node.get_logger().info(f'Test completed, {counter} requests sent')
+    shutdown_callback()
 
 if __name__ == '__main__':
     main()
