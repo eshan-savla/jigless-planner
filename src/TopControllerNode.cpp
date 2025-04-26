@@ -355,7 +355,7 @@ namespace jigless_planner
         std::unique_lock<std::mutex> joints_lock(failed_joints_mutex_);
         joints_lock.unlock();
         auto start_time = std::chrono::steady_clock::now();
-        auto timeout = std::chrono::seconds(1);
+        auto timeout = std::chrono::seconds(2);
         while (true) {
           auto elapsed = std::chrono::steady_clock::now() - start_time;
           if (elapsed > timeout) {
