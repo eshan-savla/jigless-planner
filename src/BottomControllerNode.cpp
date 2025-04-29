@@ -474,6 +474,17 @@ namespace jigless_planner
   CallbackReturnT BottomControllerNode::on_cleanup(const rclcpp_lifecycle::State &previous_state)
   {
     RCLCPP_INFO(this->get_logger(), "Cleaning up bottom controller node");
+    auto start_time = std::chrono::steady_clock::now();
+    auto timeout = std::chrono::seconds(5);
+    while (started_) {
+      auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+      if (elapsed_time > timeout) {
+        RCLCPP_WARN(this->get_logger(), "Timeout while waiting for current goal to finish");
+        return CallbackReturnT::FAILURE;
+      }
+      RCLCPP_INFO(this->get_logger(), "Waiting for current goal to finish before cleaning up");
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
     std::unique_lock<std::mutex> lock(activated_mutex_);
     activated_ = false;
     lock.unlock();
