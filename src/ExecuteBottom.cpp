@@ -8,11 +8,13 @@ ExecuteBottom::ExecuteBottom() : plansys2::ActionExecutorClient("execute", 100ms
   RCLCPP_INFO(this->get_logger(), "Initializing bottom executor action");
   action_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   publisher_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(10));
+  auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(1));
   qos_setting.reliable();
   publisher_opts_.callback_group = publisher_group_;
   joint_status_publisher_ = this->create_publisher<jigless_planner_interfaces::msg::JointStatus>(
     "failed_joints", qos_setting);
+  execute_started_publisher_ = this->create_publisher<std_msgs::msg::Empty>(
+    "execute_bottom_started", qos_setting);
   problem_expert_ = std::make_shared<plansys2::ProblemExpertClient>();
   this->declare_parameter("bottom_ns", rclcpp::PARAMETER_STRING);
 
@@ -42,6 +44,8 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
   ExecuteBottom::on_activate(const rclcpp_lifecycle::State & previous_state)
 {
   RCLCPP_INFO(this->get_logger(), "Activating bottom executor action");
+  auto message = std_msgs::msg::Empty();
+  execute_started_publisher_->publish(message);
   send_feedback(0.0, "Execute Bottom starting");
   std::string bottom_ns = this->get_parameter("bottom_ns").as_string();
   std::string topic = "/" + bottom_ns + "/run_bottom";
@@ -78,6 +82,8 @@ rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
       auto cancel_future = action_client_->async_cancel_goal(goal_handle);
     } else {
       RCLCPP_ERROR(this->get_logger(), "Goal handle is null");
+      auto message = jigless_planner_interfaces::msg::JointStatus();
+      joint_status_publisher_->publish(message);
     }
   }
   return ActionExecutorClient::on_deactivate(previous_state);

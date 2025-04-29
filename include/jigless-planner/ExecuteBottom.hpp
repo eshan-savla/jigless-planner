@@ -13,6 +13,7 @@
 #include <plansys2_executor/ActionExecutorClient.hpp>
 #include <plansys2_problem_expert/ProblemExpertClient.hpp>
 
+#include <std_msgs/msg/empty.hpp>
 #include "jigless_planner_interfaces/action/run_bottom.hpp"
 #include "jigless_planner_interfaces/msg/joint_status.hpp"
 
@@ -34,6 +35,7 @@ class ExecuteBottom : public plansys2::ActionExecutorClient
     rclcpp::PublisherOptions publisher_opts_;
 
     rclcpp::Publisher<jigless_planner_interfaces::msg::JointStatus>::SharedPtr joint_status_publisher_;
+    rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr execute_started_publisher_;
     rclcpp_action::Client<RunBottom>::SharedPtr action_client_;
 
     std::shared_ptr<plansys2::ProblemExpertClient> problem_expert_;
