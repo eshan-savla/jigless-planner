@@ -10,7 +10,7 @@
 #include <utility>
 #include <fstream>
 #include <mutex>
-
+#include <condition_variable>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/node.hpp>
 
@@ -24,6 +24,7 @@
 #include <plansys2_planner/PlannerClient.hpp>
 #include <plansys2_problem_expert/ProblemExpertClient.hpp>
 
+#include <std_msgs/msg/empty.hpp>
 #include "jigless_planner_interfaces/msg/joint_status.hpp"
 #include "jigless_planner_interfaces/srv/interact_top.hpp"
 
@@ -37,19 +38,26 @@ namespace jigless_planner
 
   private:
     bool goal_changed_ = false, pause_ = false, cancel_ = false, goal_was_changed_ = false;
+    bool replan_joints_recieved_ = false, expect_joints_ = false;
     std::vector<std::string> expected_crit_preds_;
-    std::vector<std::string> goal_joints;
+    std::vector<std::string> goal_joints, planning_joints;
     std::map<std::string, bool> failed_joints;
     std::unordered_map<std::string, std::vector<std::string>> reachable_pos_map_;
     std::mutex failed_joints_mutex_;
     std::mutex interaction_mutex_;
+    std::thread planning_thread_;
+    std::condition_variable planning_cv_;
+    std::mutex planning_mutex_;
+    bool planning_done = false, planning_requested_ = false;
     std::vector<plansys2_msgs::msg::ActionExecutionInfo> feedback_;
     typedef enum
     {
       STARTING,
       READY,
+      PLANNING,
       RUNNING,
-      PAUSED,
+      WAITING,
+      UPDATING,
       STOPPED,
       CANCELLED
     } StateType;
@@ -71,6 +79,7 @@ namespace jigless_planner
     rclcpp::Client<lifecycle_msgs::srv::GetState>::SharedPtr get_state_client_;
     rclcpp::Client<plansys2_msgs::srv::AddProblem>::SharedPtr add_problem_client_;
     rclcpp::Subscription<jigless_planner_interfaces::msg::JointStatus>::SharedPtr joint_status_subscriber_;
+    rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr execute_started_subscriber_;
     rclcpp::Service<jigless_planner_interfaces::srv::InteractTop>::SharedPtr interact_top_service_;
     rclcpp::TimerBase::SharedPtr step_timer_;
     std::chrono::milliseconds step_duration_;
@@ -81,6 +90,7 @@ namespace jigless_planner
     std::unique_ptr<std::vector<plansys2_msgs::msg::ActionExecutionInfo>> get_executing_actions(
       const std::vector<plansys2_msgs::msg::ActionExecutionInfo> &feedback);
     void jointCallback(const jigless_planner_interfaces::msg::JointStatus & msg);
+    void executeStartedCallback(const std_msgs::msg::Empty & msg);
     std::string getCurrentPosFromAction(const std::string & action_name) const;
     std::vector<std::string> getReachablePos(const std::string & instance);
     std::vector<plansys2::Predicate> getInstancePredicates(const std::string & predicate_name,
@@ -105,8 +115,9 @@ namespace jigless_planner
       const int & id, std::unordered_map<std::string, bool> & grounded_predicates,
       std::unordered_set<int> &visited_ids, const bool & negate = false);
     void patch_missing_predicates();
-    
-  };
+    void plan();
+    static std::string create_goal_string(const std::vector<std::string> & joints);
+    };
 }
 
 #endif // JIGLESS_PLANNER_TOPCONTROLLERNODE_HPP

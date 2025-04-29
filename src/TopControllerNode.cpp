@@ -7,6 +7,15 @@ namespace jigless_planner
   TopControllerNode::TopControllerNode(const std::string &node_name) : rclcpp::Node(node_name),
     state_(STARTING), step_duration_(std::chrono::milliseconds(100))
   {
+    planning_thread_ = std::thread([this]() {
+      while (rclcpp::ok()) {
+        std::unique_lock<std::mutex> lock(planning_mutex_);
+        planning_cv_.wait(lock, [this]() {return planning_requested_;});
+        planning_requested_ = false;
+        lock.unlock();
+        plan();
+      }
+    });
     init();
   }
 
@@ -25,6 +34,13 @@ namespace jigless_planner
     RCLCPP_INFO(this->get_logger(), "Shutting down bottom controller node");
     if (change_state_client_)
       set_state(lifecycle_msgs::msg::Transition::TRANSITION_DESTROY);
+    std::unique_lock<std::mutex> lock(planning_mutex_);
+    planning_requested_ = false;
+    planning_cv_.notify_one();
+    if (planning_thread_.joinable()) {
+      planning_thread_.join();
+    }
+    RCLCPP_INFO(this->get_logger(), "Top controller node destroyed");
   }
 
   void TopControllerNode::init()
@@ -56,6 +72,9 @@ namespace jigless_planner
     joint_status_subscriber_ = this->create_subscription<jigless_planner_interfaces::msg::JointStatus>(
       "failed_joints", qos_setting, std::bind(
       &TopControllerNode::jointCallback, this, std::placeholders::_1), subscriber_opt);
+    execute_started_subscriber_ = this->create_subscription<std_msgs::msg::Empty>(
+      "execute_bottom_started", qos_setting, std::bind(
+      &TopControllerNode::executeStartedCallback, this, std::placeholders::_1), subscriber_opt);
     interact_top_service_ = this->create_service<jigless_planner_interfaces::srv::InteractTop>("interact_top",
       std::bind(&TopControllerNode::topServiceCallback, this, std::placeholders::_1,
         std::placeholders::_2), rmw_qos_profile_services_default, interactor_group);
@@ -121,8 +140,14 @@ namespace jigless_planner
     }
     pause_ = pause_ && !goal_was_changed_ ? pause_ : false;
     goal_was_changed_ = false;
+    replan_joints_recieved_ = true;
   }
 
+  void TopControllerNode::executeStartedCallback(const std_msgs::msg::Empty &msg)
+  {
+    RCLCPP_INFO(this->get_logger(), "Execute bottom started");
+    expect_joints_ = true;
+  }
   void TopControllerNode::topServiceCallback(
     const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Request> request,
     const std::shared_ptr<jigless_planner_interfaces::srv::InteractTop::Response> response)
@@ -251,39 +276,21 @@ namespace jigless_planner
           if (step_duration_ > std::chrono::milliseconds(100)) {
             resetTimer(std::chrono::milliseconds(100));
           }
-          std::stringstream goal_ss;
-          goal_ss << "(:goal (and";
-          for (const auto &joint : goal_joints) {
-            goal_ss << " (welded "<< joint << ")";
+          state_ = PLANNING;
+          RCLCPP_INFO(this->get_logger(), "Switching to PLANNING state");
+        }
+        break;
+      }
+      case PLANNING: {
+        // Perform actions for the PLANNING state
+        {
+          std::lock_guard<std::mutex> lock(planning_mutex_);
+          if (planning_joints != goal_joints) {
+            planning_requested_ = true;
           }
-          goal_ss << "))";
-          std::string s = goal_ss.str();
-          RCLCPP_INFO(this->get_logger(), "Received goal request");
-          patch_missing_predicates();
-          problem_expert_->setGoal(plansys2::Goal(goal_ss.str()));
-          std::string domain = domain_expert_->getDomain();
-          std::string problem = problem_expert_->getProblem();
-          auto plan = planner_client_->getPlan(domain, problem);
-          if (!plan.has_value()) {
-            RCLCPP_ERROR_STREAM(this->get_logger(), "Could not find plan to reach goal " << goal_ss.str() << std::endl); 
-            RCLCPP_WARN(this->get_logger(), "Clearing and waiting for new goal");
-            problem_expert_->clearGoal();
-            goal_joints.clear();
-            set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
-          }
-          if (executor_client_->start_plan_execution(plan.value())) {
-            RCLCPP_INFO(this->get_logger(), "Plan started");
-            pause_ = false;
-            cancel_ = false;
-            goal_changed_ = false;
-            state_ = RUNNING;
-            RCLCPP_INFO(this->get_logger(), "Switching to RUNNING state");
-          } else {
-            RCLCPP_ERROR(this->get_logger(), "Failed to start plan execution");
-            RCLCPP_WARN(this->get_logger(), "Clearing and waiting for new goal");
-            problem_expert_->clearGoal();
-            goal_joints.clear();
-            set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+          if (planning_requested_) {
+            planning_joints = goal_joints;
+            planning_cv_.notify_one();
           }
         }
         break;
@@ -319,13 +326,13 @@ namespace jigless_planner
         feedback_ = executor_client_->getFeedBack().action_execution_status;
         if (goal_changed_) {
           RCLCPP_INFO(this->get_logger(), "Goal changed, stopping execution");
-          state_ = PAUSED;
+          state_ = WAITING;
           break;
         }
         {
           std::lock_guard<std::mutex> lock(failed_joints_mutex_);
-          if (pause_) {
-            state_ = PAUSED;
+          if (pause_ && replan_joints_recieved_) {
+            state_ = UPDATING;
             break;
           }
         }
@@ -343,37 +350,57 @@ namespace jigless_planner
         }
         break;
       }
-      case PAUSED: {
+      case WAITING: {
+        RCLCPP_WARN(this->get_logger(), "Cancelling plan execution");
+        executor_client_->cancel_plan_execution();
+        RCLCPP_INFO(this->get_logger(), "Waiting for replan joints from bottom controller");
+        auto start_time = std::chrono::steady_clock::now();
+        auto timeout = std::chrono::minutes(5);
+        StateType switch_to;
+        while (rclcpp::ok())
+        {
+          if (!expect_joints_) {
+            RCLCPP_INFO(this->get_logger(), "No joints expected");            
+            switch_to = UPDATING;
+            break;
+          }
+          auto elapsed = std::chrono::steady_clock::now() - start_time;
+          if (elapsed > timeout) {
+            RCLCPP_WARN(this->get_logger(), "Timeout waiting for failed joints");
+            switch_to = CANCELLED;
+            break;
+          }
+          if(replan_joints_recieved_){
+            switch_to = UPDATING;
+            expect_joints_ = false;
+            break;
+          }
+          if (cancel_) {
+            RCLCPP_INFO(this->get_logger(), "Waiting cancelled");
+            switch_to = CANCELLED;
+            expect_joints_ = false;
+            break;
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
+        RCLCPP_INFO(this->get_logger(), "Switching to %s state", switch_to == UPDATING ? "UPDATING" : "CANCELLED");
+        state_ = switch_to;
+        break;
+      }
+      case UPDATING: {
         // Perform actions for the PAUSED state
         RCLCPP_WARN_EXPRESSION(this->get_logger(), goal_changed_, "Paused as goal changed");
         RCLCPP_WARN_EXPRESSION(this->get_logger(), !goal_changed_, "Paused as some joints failed to weld");
-        RCLCPP_WARN(this->get_logger(), "Cancelling plan execution");
-        executor_client_->cancel_plan_execution();
+        if (pause_){
+          RCLCPP_WARN(this->get_logger(), "Cancelling plan execution");
+          executor_client_->cancel_plan_execution();
+        }
         if (goal_changed_) {
           RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
           set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
         }
         std::unique_lock<std::mutex> joints_lock(failed_joints_mutex_);
-        joints_lock.unlock();
-        auto start_time = std::chrono::steady_clock::now();
-        auto timeout = std::chrono::seconds(2);
-        while (true) {
-          auto elapsed = std::chrono::steady_clock::now() - start_time;
-          if (elapsed > timeout) {
-            RCLCPP_WARN(this->get_logger(), "Timeout waiting for failed joints");
-            break;
-          }
-          joints_lock.lock();
-          if(pause_){
-            joints_lock.unlock();
-            break;
-          }
-          joints_lock.unlock();
-          std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }
-        joints_lock.lock();
         std::map<std::string, bool> failed_joints_cp = std::move(failed_joints); // Check if failed_joints is empty after this
-        pause_ = false;
         joints_lock.unlock();
         resolve_critical_predicates(feedback_);
         std::string current_pos = getCurrentPosFromAction("execute");
@@ -385,6 +412,9 @@ namespace jigless_planner
             problem_expert_->removePredicate(plansys2::Predicate("(welded " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
             problem_expert_->removePredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
+            // Add case where goal_changed_ is checked. If no, change reachable pos. Warn if no new pos and retry from same.
+            // Get reachable poses of joint via built-in method which searches through predicates.
+            // Determine execute-bottom pos and remove that from joint, if alternatives are there.
             if (!goal_changed_) {
               problem_expert_->removePredicate(plansys2::Predicate("(commandable " + pair.first + ")"));
               RCLCPP_INFO(this->get_logger(), "Changing reachable pos of %s", pair.first.c_str());
@@ -399,9 +429,6 @@ namespace jigless_planner
                 RCLCPP_WARN(this->get_logger(), "Retrying from same position");
               }
             }
-            // Add case where goal_changed_ is checked. If no, change reachable pos. Warn if no new pos and retry from same.
-            // Get reachable poses of joint via built-in method which searches through predicates.
-            // Determine execute-bottom pos and remove that from joint, if alternatives are there.
           } else {
             RCLCPP_INFO(this->get_logger(), "Joint %s is ok", pair.first.c_str());
             goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first),
@@ -412,12 +439,15 @@ namespace jigless_planner
           }
         }
         goal_was_changed_ = goal_changed_ ? true : false;
-        goal_changed_ = goal_changed_ ? false : goal_changed_;
+        goal_changed_ = false;
+        pause_ = false;
+        replan_joints_recieved_ = false;
         RCLCPP_INFO(this->get_logger(), "Updated predicates");
         RCLCPP_INFO(this->get_logger(), "Clearing goal for replanning under new circumstances");
         problem_expert_->clearGoal();
         RCLCPP_INFO(this->get_logger(), "Resetting execution status");
         problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
+        planning_joints.clear();
         state_ = READY;
         RCLCPP_INFO(this->get_logger(), "Switching to READY state");
         break;
@@ -438,20 +468,35 @@ namespace jigless_planner
       }
       case CANCELLED: {
         // Perform actions for the CANCELLED state
+        if (!cancel_) {
+          RCLCPP_DEBUG(this->get_logger(), "Already cancelling");
+          break;
+        }
         RCLCPP_INFO(this->get_logger(), "Cancelling plan execution");
         executor_client_->cancel_plan_execution();
-        RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
-        set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
-        RCLCPP_INFO(this->get_logger(), "Clearing goal");
-        problem_expert_->clearGoal();
-        goal_joints.clear();
         RCLCPP_INFO(this->get_logger(), "Resetting execution status");
         problem_expert_->addPredicate(plansys2::Predicate("(not_executing)"));
-        RCLCPP_INFO(this->get_logger(), "Switching to READY state");
-        state_ = READY;
-        std::unique_lock<std::mutex> lock(interaction_mutex_);
-        cancel_ = false;
-        lock.unlock();
+        RCLCPP_INFO(this->get_logger(), "Deactivating bottom controller");
+        set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+        RCLCPP_INFO(this->get_logger(), "Clearing goal and knowledge");
+        problem_expert_->clearGoal();
+        problem_expert_->clearKnowledge();
+        goal_joints.clear();
+        planning_joints.clear();
+        RCLCPP_INFO(this->get_logger(), "Cleaning up bottom controller");
+        std::thread([this]()
+        {
+          std::unique_lock<std::mutex> lock(interaction_mutex_);
+          cancel_ = false;
+          lock.unlock();
+          while (rclcpp::ok() && get_state() != lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED) {
+            set_state(lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP);
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          }
+          RCLCPP_INFO(this->get_logger(), "Bottom controller cleaned up");
+          RCLCPP_INFO(this->get_logger(), "Switching to STARTING state");
+          state_ = STARTING;
+        }).detach();
         break;
       }
     }
@@ -701,6 +746,66 @@ namespace jigless_planner
         grounded_predicates[effects.at(i).name] = negate;
       }
     }
+  }
+
+  void jigless_planner::TopControllerNode::plan() 
+  {
+    RCLCPP_INFO(this->get_logger(), "Received goal request");
+    patch_missing_predicates();
+    std::string goal_string = create_goal_string(planning_joints);
+    problem_expert_->setGoal(plansys2::Goal(goal_string));
+    std::string domain = domain_expert_->getDomain();
+    std::string problem = problem_expert_->getProblem();
+    auto future_plan = std::async(std::launch::async, [this, domain, problem]() {
+      return planner_client_->getPlan(domain, problem);
+    });
+    while(future_plan.wait_for(std::chrono::milliseconds(100)) != std::future_status::ready) {
+      if (planning_requested_) {
+        RCLCPP_INFO(this->get_logger(), "Planning interrupted, restarting");
+        return;
+      }
+      if (cancel_) {
+        RCLCPP_INFO(this->get_logger(), "Planning cancelled");
+        state_ = CANCELLED;
+        return;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    auto plan = future_plan.get();
+    if (!plan.has_value()) {
+      RCLCPP_ERROR_STREAM(this->get_logger(), "Could not find plan to reach goal " << goal_string << std::endl); 
+      RCLCPP_WARN(this->get_logger(), "Clearing and waiting for new goal");
+      problem_expert_->clearGoal();
+      goal_joints.clear();
+      set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+    }
+    if (executor_client_->start_plan_execution(plan.value())) {
+      RCLCPP_INFO(this->get_logger(), "Plan started");
+      pause_ = false;
+      cancel_ = false;
+      goal_changed_ = false;
+      state_ = RUNNING;
+      RCLCPP_INFO(this->get_logger(), "Switching to RUNNING state");
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Failed to start plan execution");
+      RCLCPP_WARN(this->get_logger(), "Clearing and waiting for new goal");
+      problem_expert_->clearGoal();
+      goal_joints.clear();
+      set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+      state_ = CANCELLED;
+    }
+  }
+
+  std::string jigless_planner::TopControllerNode::create_goal_string(
+    const std::vector<std::string> &goal_joints)
+  {
+    std::stringstream goal_ss;
+    goal_ss << "(:goal (and";
+    for (const auto &joint : goal_joints) {
+      goal_ss << " (welded "<< joint << ")";
+    }
+    goal_ss << "))";
+    return goal_ss.str();
   }
 }
 
