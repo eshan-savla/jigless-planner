@@ -31,8 +31,8 @@ def generate_launch_description():
     problem_file_count = LaunchConfiguration('file_number')
     node_count = LaunchConfiguration('node_count')
     bottom_name = "bottom_controller"
-    top_problem_file = example_dir + '/pddl/test1/top_welding_problem_'
-    bottom_problem_file = example_dir + '/pddl/test1/weldcell_problem_no_workpiece_'
+    top_problem_file = example_dir + '/pddl/test1_complexity/top_welding_problem_'
+    bottom_problem_file = example_dir + '/pddl/test1_complexity/weldcell_problem_no_workpiece_'
     
     # Declare namespaces
     declare_bottom_ns_cmd = DeclareLaunchArgument(

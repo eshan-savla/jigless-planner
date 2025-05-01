@@ -62,7 +62,7 @@ def generate_pddl_from_csv(csv_file, output_pddl_file):
 def main():
     import os
     csv_file = os.path.join(os.path.dirname(__file__), '../pddl/joint_dependencies.csv')
-    output_pddl_file = os.path.join(os.path.dirname(__file__), '../pddl/test1/top_welding_problem_20.pddl')
+    output_pddl_file = os.path.join(os.path.dirname(__file__), '../pddl/test1_complexity/top_welding_problem_26.pddl')
     generate_pddl_from_csv(csv_file, output_pddl_file)
 
 if __name__ == "__main__":
