@@ -1,110 +1,243 @@
 bottom_planner/transit:
   ros__parameters:
-    plugins:
-      - jigless_planner_transit_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_transit_bt_node
     publisher_port: 1668
     server_port: 1669
-bottom_planner/weld:
-  ros__parameters:
-    plugins:
-      - jigless_planner_weld_bt_node
-    enable_groot_monitoring: true
-    publisher_port: 1670
-    server_port: 1671
 bottom_planner/validate:
   ros__parameters:
-    plugins:
-      - jigless_planner_validate_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_validate_bt_node
     publisher_port: 1672
     server_port: 1673
+bottom_planner/weld:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_weld_bt_node
+    publisher_port: 1670
+    server_port: 1671
 top_planner/command_1:
   ros__parameters:
-    plugins:
-      - jigless_planner_command_bt_node
     enable_groot_monitoring: true
-    publisher_port: 1674
-    server_port: 1675
-top_planner/command_2:
-  ros__parameters:
     plugins:
-      - jigless_planner_command_bt_node
-    enable_groot_monitoring: true
-    publisher_port: 1676
-    server_port: 1677
-top_planner/command_3:
-  ros__parameters:
-    plugins:
-      - jigless_planner_command_bt_node
-    enable_groot_monitoring: true
+    - jigless_planner_command_bt_node
     publisher_port: 1678
     server_port: 1679
-top_planner/move_robot:
+top_planner/command_10:
   ros__parameters:
-    plugins:
-      - jigless_planner_moverobot_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
+    publisher_port: 1696
+    server_port: 1697
+top_planner/command_2:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1680
     server_port: 1681
-top_planner/set_status_1:
+top_planner/command_3:
   ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1682
     server_port: 1683
-top_planner/set_status_2:
+top_planner/command_4:
   ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1684
     server_port: 1685
-top_planner/set_status_3:
+top_planner/command_5:
   ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1686
     server_port: 1687
-top_planner/set_status_4:
+top_planner/command_6:
   ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1688
     server_port: 1689
-top_planner/set_status_5:
+top_planner/command_7:
   ros__parameters:
-    plugins:
-      - jigless_planner_setstatus_bt_node
     enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
     publisher_port: 1690
     server_port: 1691
+top_planner/command_8:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
+    publisher_port: 1692
+    server_port: 1693
+top_planner/command_9:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_command_bt_node
+    publisher_port: 1694
+    server_port: 1695
 top_planner/execute_1:
   ros__parameters:
     enable_groot_monitoring: true
-    publisher_port: 1692
-    server_port: 1693
+    publisher_port: 1676
+    server_port: 1677
+top_planner/move_robot:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_moverobot_bt_node
+    publisher_port: 1674
+    server_port: 1675
 top_planner/set_commandable_1:
   ros__parameters:
-    plugins:
-      - jigless_planner_setcommandable_bt_node
     enable_groot_monitoring: true
-    publisher_port: 1694
-    server_port: 1695
-top_planner/set_commandable_2:
-  ros__parameters:
     plugins:
-      - jigless_planner_setcommandable_bt_node
-    enable_groot_monitoring: true
-    publisher_port: 1696
-    server_port: 1697
-top_planner/set_commandable_3:
-  ros__parameters:
-    plugins:
-      - jigless_planner_setcommandable_bt_node
-    enable_groot_monitoring: true
+    - jigless_planner_setcommandable_bt_node
     publisher_port: 1698
     server_port: 1699
+top_planner/set_commandable_10:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1716
+    server_port: 1717
+top_planner/set_commandable_2:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1700
+    server_port: 1701
+top_planner/set_commandable_3:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1702
+    server_port: 1703
+top_planner/set_commandable_4:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1704
+    server_port: 1705
+top_planner/set_commandable_5:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1706
+    server_port: 1707
+top_planner/set_commandable_6:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1708
+    server_port: 1709
+top_planner/set_commandable_7:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1710
+    server_port: 1711
+top_planner/set_commandable_8:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1712
+    server_port: 1713
+top_planner/set_commandable_9:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setcommandable_bt_node
+    publisher_port: 1714
+    server_port: 1715
+top_planner/set_status_1:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1718
+    server_port: 1719
+top_planner/set_status_10:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1736
+    server_port: 1737
+top_planner/set_status_2:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1720
+    server_port: 1721
+top_planner/set_status_3:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1722
+    server_port: 1723
+top_planner/set_status_4:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1724
+    server_port: 1725
+top_planner/set_status_5:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1726
+    server_port: 1727
+top_planner/set_status_6:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1728
+    server_port: 1729
+top_planner/set_status_7:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1730
+    server_port: 1731
+top_planner/set_status_8:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1732
+    server_port: 1733
+top_planner/set_status_9:
+  ros__parameters:
+    enable_groot_monitoring: true
+    plugins:
+    - jigless_planner_setstatus_bt_node
+    publisher_port: 1734
+    server_port: 1735

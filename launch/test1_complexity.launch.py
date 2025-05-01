@@ -17,7 +17,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, TextSubstitution
 from launch_ros.actions import Node
@@ -29,6 +29,7 @@ def generate_launch_description():
     bottom_ns = LaunchConfiguration('bottom_ns')
     top_ns = LaunchConfiguration('top_ns')
     problem_file_count = LaunchConfiguration('file_number')
+    node_count = LaunchConfiguration('node_count')
     bottom_name = "bottom_controller"
     top_problem_file = example_dir + '/pddl/test1/top_welding_problem_'
     bottom_problem_file = example_dir + '/pddl/test1/weldcell_problem_no_workpiece_'
@@ -49,6 +50,12 @@ def generate_launch_description():
         default_value='10',
         description='Problem file number'
     )
+    declare_node_count = DeclareLaunchArgument(
+        'node_count',
+        default_value='3',
+        description='Number of nodes to create'
+    )
+
     log_problem_file = LogInfo(
         msg=[
             'Bottom file: ', bottom_problem_file, problem_file_count, '.pddl', '\n'
@@ -141,90 +148,56 @@ def generate_launch_description():
 
     # Specify the top actions
 
-    command_1_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='command_1',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'command',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
-            }
-        ])
+    def create_dynamic_nodes(context): 
+        dynamic_nodes = []
+        count = int(LaunchConfiguration('node_count').perform(context))
+        for i in range(1, count + 1):  # Dynamically create nodes
+            dynamic_nodes.append(Node(
+                package='plansys2_bt_actions',
+                executable='bt_action_node',
+                name=f'command_{i}',
+                namespace=top_ns,
+                output='screen',
+                parameters=[
+                    example_dir + '/config/bt_params.yaml',
+                    {
+                        'action_name': 'command',
+                        'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
+                    }
+                ]
+            ))
 
-    command_2_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='command_2',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'command',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
-            }
-        ])
+            dynamic_nodes.append(Node(
+                package='plansys2_bt_actions',
+                executable='bt_action_node',
+                name=f'set_commandable_{i}',
+                namespace=top_ns,
+                output='screen',
+                parameters=[
+                    example_dir + '/config/bt_params.yaml',
+                    {
+                        'action_name': 'set_commandable',
+                        'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
+                    }
+                ]
+            ))
 
-    command_3_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='command_3',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'command',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/command.xml'
-            }
-        ])
-
-    set_commandable_1_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_commandable_1',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_commandable',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
-            }
-        ])
-    
-    set_commandable_2_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_commandable_2',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_commandable',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
-            }
-        ])
-    
-    set_commandable_3_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_commandable_3',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_commandable',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setcommandable.xml'
-            }
-        ])
-    
+            dynamic_nodes.append(Node(
+                package='plansys2_bt_actions',
+                executable='bt_action_node',
+                name=f'set_status_{i}',
+                namespace=top_ns,
+                output='screen',
+                parameters=[
+                    example_dir + '/config/bt_params.yaml',
+                    {
+                        'action_name': 'set_status',
+                        'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
+                    }
+                ]
+            ))
+        return dynamic_nodes
+        
     moverobot_cmd = Node(
         package='plansys2_bt_actions',
         executable='bt_action_node',
@@ -239,75 +212,6 @@ def generate_launch_description():
             }
         ])
 
-    set_status_1_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_status_1',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_status',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
-            }
-        ])
-
-    set_status_2_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_status_2',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_status',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
-            }
-        ])
-
-    set_status_3_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_status_3',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_status',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
-            }
-        ])
-
-    set_status_4_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_status_4',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_status',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
-            }
-        ])
-
-    set_status_5_cmd = Node(
-        package='plansys2_bt_actions',
-        executable='bt_action_node',
-        name='set_status_5',
-        namespace=top_ns,
-        output='screen',
-        parameters=[
-            example_dir + '/config/bt_params.yaml',
-            {
-                'action_name': 'set_status',
-                'bt_xml_file': example_dir + '/behavior_trees_xml/setstatus.xml'
-            }
-        ])
     execute_bottom_cmd = Node(
         package='jigless-planner',
         executable='execute_bottom_node',
@@ -343,6 +247,7 @@ def generate_launch_description():
     ld.add_action(declare_bottom_ns_cmd)
     ld.add_action(declare_top_ns_cmd)
     ld.add_action(declare_file_count)
+    ld.add_action(declare_node_count)
 
     # Declare the launch options
     ld.add_action(plansys2_bottom)
@@ -353,17 +258,7 @@ def generate_launch_description():
     ld.add_action(transit_cmd)
     ld.add_action(weld_cmd)
     ld.add_action(validate_cmd)
-    ld.add_action(command_1_cmd)
-    ld.add_action(command_2_cmd)
-    ld.add_action(command_3_cmd)
-    ld.add_action(set_commandable_1_cmd)
-    ld.add_action(set_commandable_2_cmd)
-    ld.add_action(set_commandable_3_cmd)
     ld.add_action(moverobot_cmd)
-    ld.add_action(set_status_1_cmd)
-    ld.add_action(set_status_2_cmd)
-    ld.add_action(set_status_3_cmd)
-    ld.add_action(set_status_4_cmd)
-    ld.add_action(set_status_5_cmd)
     ld.add_action(execute_bottom_cmd)
+    ld.add_action(OpaqueFunction(function=create_dynamic_nodes))
     return ld
