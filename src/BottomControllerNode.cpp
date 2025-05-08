@@ -234,8 +234,6 @@ namespace jigless_planner
       cancel_ = false;
       return;
     }
-    feedback->action_execution_status = executor_client_->getFeedBack().action_execution_status;
-    current_goal_handle_->publish_feedback(feedback);
     if (!executor_client_->execute_and_check_plan()) { // Plan finished
       started_ = false;
       auto plan_result = executor_client_->getResult();
@@ -251,6 +249,8 @@ namespace jigless_planner
         return;
       }
     }
+    feedback->action_execution_status = executor_client_->getFeedBack().action_execution_status;
+    current_goal_handle_->publish_feedback(feedback);
     if (!activated_) {
       RCLCPP_ERROR(this->get_logger(), "Goal change recieved");
       started_ = false;
