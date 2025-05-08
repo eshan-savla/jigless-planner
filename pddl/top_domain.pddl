@@ -104,6 +104,8 @@
           (at end (and 
             (welded ?j)
             (not (not_welded ?j))
+            (not (commanded ?j))
+            (not (commandable ?j))
           ))
       )
   )
