@@ -92,6 +92,7 @@ namespace jigless_planner
     void jointCallback(const jigless_planner_interfaces::msg::JointStatus & msg);
     void executeStartedCallback(const std_msgs::msg::Empty & msg);
     std::string getCurrentPosFromAction(const std::string & action_name) const;
+    std::string getCurrentPosFromPredicates() const;
     std::vector<std::string> getReachablePos(const std::string & instance);
     std::vector<plansys2::Predicate> getInstancePredicates(const std::string & predicate_name,
       const std::string & instance_name) const;
@@ -116,7 +117,8 @@ namespace jigless_planner
       std::unordered_set<int> &visited_ids, const bool & negate = false);
     void patch_missing_predicates();
     void plan();
-    static std::string create_goal_string(const std::vector<std::string> & joints);
+    static bool expect_joints(const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & feedback, const std::string & action_name = "execute");
+    static std::string create_goal_string(const std::vector<std::string> &joints);
     };
 }
 

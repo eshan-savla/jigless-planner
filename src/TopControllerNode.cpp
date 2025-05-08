@@ -65,7 +65,7 @@ namespace jigless_planner
     get_state_client_ = this->create_client<lifecycle_msgs::srv::GetState>(
       "/" + bottom_namespace + "/" + bottom_controller_node + "/get_state",
       rmw_qos_profile_services_default, lifecycle_group);
-    auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(10));
+    auto qos_setting = rclcpp::QoS(rclcpp::KeepLast(1));
     qos_setting.reliable();
     auto subscriber_opt = rclcpp::SubscriptionOptions();
     subscriber_opt.callback_group = action_group;
@@ -261,8 +261,10 @@ namespace jigless_planner
       case READY: {
       // Perform actions for the READY state
         feedback_.clear();
-        if (cancel_)
-          cancel_ = false;
+        // if (cancel_){
+        //   cancel_ = false;
+        //   RCLCPP_WARN(this->get_logger(), "Cannot cancel in READY state");
+        // }
         if (!goal_joints.empty()){
           if (get_state() == lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE)
             if (!set_state(lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE)){
@@ -357,13 +359,10 @@ namespace jigless_planner
         auto start_time = std::chrono::steady_clock::now();
         auto timeout = std::chrono::minutes(5);
         StateType switch_to;
+        std::vector<plansys2_msgs::msg::ActionExecutionInfo> feedback;
         while (rclcpp::ok())
         {
-          if (!expect_joints_) {
-            RCLCPP_INFO(this->get_logger(), "No joints expected");            
-            switch_to = UPDATING;
-            break;
-          }
+          feedback = executor_client_->getFeedBack().action_execution_status;
           auto elapsed = std::chrono::steady_clock::now() - start_time;
           if (elapsed > timeout) {
             RCLCPP_WARN(this->get_logger(), "Timeout waiting for failed joints");
@@ -373,6 +372,11 @@ namespace jigless_planner
           if(replan_joints_recieved_){
             switch_to = UPDATING;
             expect_joints_ = false;
+            break;
+          }
+          if (!expect_joints(feedback)) {
+            RCLCPP_INFO(this->get_logger(), "No joints expected");
+            switch_to = UPDATING;
             break;
           }
           if (cancel_) {
@@ -404,6 +408,9 @@ namespace jigless_planner
         joints_lock.unlock();
         resolve_critical_predicates(feedback_);
         std::string current_pos = getCurrentPosFromAction("execute");
+        if (current_pos.empty()) {
+          current_pos = getCurrentPosFromPredicates();
+        }
         RCLCPP_INFO(this->get_logger(), "Current position: %s", current_pos.c_str());
         for (const auto &pair : failed_joints_cp) {
           if (pair.second) {
@@ -497,6 +504,12 @@ namespace jigless_planner
           RCLCPP_INFO(this->get_logger(), "Switching to STARTING state");
           state_ = STARTING;
         }).detach();
+        expect_joints_ = false;
+        replan_joints_recieved_ = false;
+        pause_ = false;
+        goal_changed_ = false;
+        goal_was_changed_ = false;
+        failed_joints.clear();
         break;
       }
     }
@@ -525,6 +538,16 @@ namespace jigless_planner
                       });
     return next_execute_it != feedback_.end() ? next_execute_it->arguments[0]
      : last_succeeded_it->arguments[0];
+  }
+
+  std::string jigless_planner::TopControllerNode::getCurrentPosFromPredicates() const
+  {
+    auto predicates = problem_expert_->getPredicates();
+    for (const auto &predicate : predicates) {
+      if (predicate.name == "at")
+        return predicate.parameters[0].name;
+    }
+    return "";
   }
 
   std::vector<std::string> TopControllerNode::getReachablePos(const std::string &joint_name) {
@@ -794,6 +817,22 @@ namespace jigless_planner
       set_state(lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
       state_ = CANCELLED;
     }
+  }
+
+  bool jigless_planner::TopControllerNode::expect_joints(
+    const std::vector<plansys2_msgs::msg::ActionExecutionInfo> & feedback,
+    const std::string & action_name)
+  {
+    auto it = std::find_if(feedback.begin(), feedback.end(),
+      [action_name](const plansys2_msgs::msg::ActionExecutionInfo &action)
+      { return action.action == action_name && 
+        action.status != plansys2_msgs::msg::ActionExecutionInfo::NOT_EXECUTED &&
+        action.message_status == "expect_joints";
+      });
+    if (it != feedback.end()) {
+      return true;
+    }
+    return false;
   }
 
   std::string jigless_planner::TopControllerNode::create_goal_string(
