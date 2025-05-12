@@ -7,6 +7,7 @@
   
   (:predicates
     (joint_orientation ?j - joint)
+    (not_joint_measured ?j - joint)
   )
 
   (:durative-action transit
@@ -16,7 +17,10 @@
           (at start (and
             (joint_orientation ?from)
           ))
-          )
+          (over all (and
+            (not_joint_measured ?from)
+          ))
+    )
       
     :effect (and
         (at start (not (joint_orientation ?from)))
