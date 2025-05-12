@@ -27,7 +27,7 @@
 
   
   (:durative-action command
-      :parameters (?j - joint ?p - position)
+      :parameters (?j - joint)
       :duration (= ?duration 1)
       :condition (and 
           (over all (and 
