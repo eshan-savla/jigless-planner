@@ -73,14 +73,14 @@
     (depends_on joint8 joint7)
     (depends_on joint8 joint6)
 
-    (not_seam_measured joint1)
-    (not_seam_measured joint2)
-    (not_seam_measured joint3)
-    (not_seam_measured joint4)
-    (not_seam_measured joint5)
-    (not_seam_measured joint6)
-    (not_seam_measured joint7)
-    (not_seam_measured joint8)
+    (not_joint_measured joint1)
+    (not_joint_measured joint2)
+    (not_joint_measured joint3)
+    (not_joint_measured joint4)
+    (not_joint_measured joint5)
+    (not_joint_measured joint6)
+    (not_joint_measured joint7)
+    (not_joint_measured joint8)
 
 
     (not_welded joint1)

@@ -9,7 +9,7 @@
     (workpiece_orientation ?w - workpiece ?j - joint)
     (workpiece_held ?w - workpiece)
     (has_joint ?w - workpiece ?j - joint)
-    (seam_measured ?j - joint)
+    (joint_measured ?j - joint)
     (depends_on ?j1 ?j2 - joint)
     (welded ?j - joint)
     (fused ?w1 ?w2 - workpiece)
@@ -172,7 +172,7 @@
     :parameters (?j - joint)
     :duration (= ?duration 10)
     :condition (and (over all (and 
-            (seam_measured ?j)
+            (joint_measured ?j)
             (forall (?j2 - joint) (imply (depends_on ?j ?j2) (welded ?j2)))
             (forall (?w - workpiece) (imply (has_joint ?w ?j) (workpiece_orientation ?w ?j)))
             (not (welded ?j))
@@ -242,7 +242,7 @@
       :condition (and 
           (at start (and 
               (not (welded ?j))
-              (not (seam_measured ?j))
+              (not (joint_measured ?j))
               ; (>= (robots_available) 2)
           ))
           (over all (forall (?w - workpiece) (and
@@ -253,7 +253,7 @@
       :effect (and 
           ; (at start (decrease (robots_available) 2))
           (at end (and 
-              (seam_measured ?j)
+              (joint_measured ?j)
               ; (increase (robots_available) 2)
           ))
       )

@@ -10,8 +10,8 @@
     (workpiece_held ?w - workpiece)
     (not_workpiece_held ?w - workpiece)
     (has_joint ?w - workpiece ?j - joint)
-    (seam_measured ?j - joint)
-    (not_seam_measured ?j - joint)
+    (joint_measured ?j - joint)
+    (not_joint_measured ?j - joint)
     (workpiece_validated ?w - workpiece)
     (depends_on ?j1 ?j2 - joint)
     (welded ?j - joint)
@@ -197,7 +197,7 @@
     :condition (and (over all (and 
             (not_welded ?j)
             (not (= ?w1 ?w2))
-            (seam_measured ?j)
+            (joint_measured ?j)
             (workpiece_validated ?w1)
             (workpiece_validated ?w2)
             (has_joint ?w1 ?j)
@@ -281,7 +281,7 @@
       :duration (= ?duration 4)
       :condition (and 
           (at start (and 
-              (not_seam_measured ?j)
+              (not_joint_measured ?j)
               (workpiece_orientation ?w1 ?j)
               (workpiece_orientation ?w2 ?j)
               (workpiece_held ?w1)
@@ -302,8 +302,8 @@
       )
       :effect (and 
           (at end (and 
-              (seam_measured ?j)
-              (not (not_seam_measured ?j))
+              (joint_measured ?j)
+              (not (not_joint_measured ?j))
               (workpiece_validated ?w1)
               (workpiece_validated ?w2)
           ))

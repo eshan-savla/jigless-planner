@@ -1,6 +1,6 @@
 (define (problem welding-problem) (:domain welding-top)
 (:objects
-    joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 joint11 joint12 joint13 joint14 joint15 joint16 joint17 joint18 joint19 joint20 - joint
+    joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 joint11 joint12 joint13 joint14 joint15 joint16 - joint
     pos1 - position
 )
 
@@ -11,7 +11,7 @@
 
     (not_executing)
 
-    (= (avg_joints_per_group) 20)
+    (= (avg_joints_per_group) 16)
 
     (depends_on joint2 joint1)
     (depends_on joint3 joint1)
@@ -34,13 +34,6 @@
     (depends_on joint15 joint12)
     (depends_on joint15 joint13)
     (depends_on joint15 joint14)
-    (depends_on joint17 joint16)
-    (depends_on joint18 joint16)
-    (depends_on joint19 joint16)
-    (depends_on joint20 joint16)
-    (depends_on joint20 joint17)
-    (depends_on joint20 joint18)
-    (depends_on joint20 joint19)
     (reachable_at joint1 pos1)
     (reachable_at joint2 pos1)
     (reachable_at joint3 pos1)
@@ -57,10 +50,6 @@
     (reachable_at joint14 pos1)
     (reachable_at joint15 pos1)
     (reachable_at joint16 pos1)
-    (reachable_at joint17 pos1)
-    (reachable_at joint18 pos1)
-    (reachable_at joint19 pos1)
-    (reachable_at joint20 pos1)
     (not_welded joint1)
     (not_welded joint2)
     (not_welded joint3)
@@ -77,10 +66,6 @@
     (not_welded joint14)
     (not_welded joint15)
     (not_welded joint16)
-    (not_welded joint17)
-    (not_welded joint18)
-    (not_welded joint19)
-    (not_welded joint20)
 )
 
 ; (:goal
@@ -102,10 +87,6 @@
 ;         (welded joint14)
 ;         (welded joint15)
 ;         (welded joint16)
-;         (welded joint17)
-;         (welded joint18)
-;         (welded joint19)
-;         (welded joint20)
 ;     )
 ; )
 

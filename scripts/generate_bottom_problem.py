@@ -31,7 +31,7 @@ def generate_pddl_from_csv(csv_file, output_pddl_file):
 
     # Add default facts
     for joint in joints:
-        pddl_content += f"    (not_seam_measured {joint})\n"
+        pddl_content += f"    (not_joint_measured {joint})\n"
     for joint in joints:
         pddl_content += f"    (not_welded {joint})\n"
 

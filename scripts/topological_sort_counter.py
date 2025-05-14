@@ -37,16 +37,16 @@ def extract_joints_and_dependencies(pddl_text: str, exclude_joint0: bool =True) 
 
     return joints, dependencies
 
-def create_seam_dag(seams: List[str], dependencies: List[str]) -> nx.DiGraph:
+def create_joint_dag(joints: List[str], dependencies: List[str]) -> nx.DiGraph:
     """
-    Create a DAG from seam dependencies.
+    Create a DAG from joint dependencies.
     
-    :param num_seams: Total number of seams (nodes)
-    :param dependencies: List of (i, j) tuples meaning seam i must precede seam j
+    :param joints: List of joints (nodes)
+    :param dependencies: List of (i, j) tuples meaning joint i must precede joint j
     :return: A NetworkX DAG object
     """
     dag = nx.DiGraph()
-    dag.add_nodes_from(seams)
+    dag.add_nodes_from(joints)
     dag.add_edges_from(dependencies)
 
     if not nx.is_directed_acyclic_graph(dag):
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # print(f"Extracted joints: {joints}")
     # print(f"Extracted dependencies: {dependencies}")
 
-    dag = create_seam_dag(joints, dependencies)
+    dag = create_joint_dag(joints, dependencies)
     total_sequences = count_topological_sorts(dag)
 
     print(f"Number of valid welding sequences: {total_sequences}")
