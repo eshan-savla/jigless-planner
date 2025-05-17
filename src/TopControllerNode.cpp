@@ -441,8 +441,8 @@ namespace jigless_planner
             goal_joints.erase(std::remove(goal_joints.begin(), goal_joints.end(), pair.first),
               goal_joints.end());
             problem_expert_->removePredicate(plansys2::Predicate("(not_welded " + pair.first + ")"));
+            problem_expert_->removePredicate(plansys2::Predicate("(commandable " + pair.first + ")"));
             problem_expert_->addPredicate(plansys2::Predicate("(welded " + pair.first + ")"));
-            problem_expert_->addPredicate(plansys2::Predicate("(commanded " + pair.first + ")"));
           }
         }
         goal_was_changed_ = goal_changed_ ? true : false;

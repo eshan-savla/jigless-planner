@@ -32,6 +32,7 @@
       :condition (and 
           (over all (and 
             (not_executing)
+            (not_executed)
             (commandable ?j)
           ))
       )
@@ -104,6 +105,7 @@
           (at end (and 
             (welded ?j)
             (not (not_welded ?j))
+            (not (commandable ?j))
           ))
       )
   )
