@@ -245,6 +245,7 @@ namespace jigless_planner
         return;
       } else {
         RCLCPP_ERROR(this->get_logger(), "Plan finished with error");
+        resolve_critical_predicates(plan_result.value().action_execution_status);
         current_goal_handle_->abort(result);
         return;
       }
