@@ -559,13 +559,14 @@ namespace jigless_planner
       }
     }
     auto it = reachable_pos_map_.find(joint_name);
-    if (it != reachable_pos_map_.end() && it->second.size() <= reachable_positions.size()) {
-      return it->second;
+    if (it == reachable_pos_map_.end()) {
+      reachable_pos_map_[joint_name] = reachable_positions;
     }
-    reachable_pos_map_[joint_name] = reachable_positions;
+    else if (it->second.size() <= reachable_positions.size())
+      reachable_pos_map_[joint_name] = reachable_positions;
     return reachable_positions;
   }
-
+  
   std::vector<plansys2::Predicate> TopControllerNode::getInstancePredicates(
     const std::string &predicate_name, const std::string &instance_name) const {
     std::vector<plansys2::Predicate> predicates = problem_expert_->getPredicates();
@@ -777,6 +778,7 @@ namespace jigless_planner
     patch_missing_predicates();
     std::string goal_string = create_goal_string(planning_joints);
     problem_expert_->setGoal(plansys2::Goal(goal_string));
+    auto preds = problem_expert_->getPredicates();
     std::string domain = domain_expert_->getDomain();
     std::string problem = problem_expert_->getProblem();
     auto future_plan = std::async(std::launch::async, [this, domain, problem]() {
