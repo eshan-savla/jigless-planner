@@ -28,7 +28,6 @@ def generate_launch_description():
     example_dir = get_package_share_directory('jigless-planner')
     bottom_ns = LaunchConfiguration('bottom_ns')
     top_ns = LaunchConfiguration('top_ns')
-    problem_file_count = LaunchConfiguration('file_number')
     bottom_name = "bottom_controller"
     
     # Declare namespaces
@@ -42,11 +41,6 @@ def generate_launch_description():
         default_value='top_planner',
         description='Namespace')
     
-    declare_file_count = DeclareLaunchArgument(
-        'file_number',
-        default_value='10',
-        description='Problem file number'
-    )
     # Specify launch bringups
     plansys2_bottom = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
@@ -124,7 +118,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {
-                'bottom_problem_file_path': example_dir + '/pddl/weldcell_problem_no_workpiece.pddl',
+                'bottom_problem_file_path': example_dir + '/pddl/test1_adaptability/weldcell_problem_no_workpiece.pddl',
             }   
         ]
     )
@@ -322,7 +316,7 @@ def generate_launch_description():
             {
                 'bottom_ns': bottom_ns,
                 'bottom_controller_name': bottom_name,
-                'top_problem_file_path': example_dir + '/pddl/top_welding_problem.pddl',
+                'top_problem_file_path': example_dir + '/pddl/test1_adaptability/top_welding_problem.pddl',
             }
         ]
     )
@@ -331,7 +325,6 @@ def generate_launch_description():
 
     ld.add_action(declare_bottom_ns_cmd)
     ld.add_action(declare_top_ns_cmd)
-    ld.add_action(declare_file_count)
 
     # Declare the launch options
     ld.add_action(plansys2_bottom)

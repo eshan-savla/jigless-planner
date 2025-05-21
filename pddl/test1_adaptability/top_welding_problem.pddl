@@ -2,7 +2,7 @@
   (:domain welding-top)
   (:objects
     joint1 joint2 joint3 joint4 joint5 joint6 joint7 joint8 joint9 joint10 - joint
-    pos1 pos2 - position
+    pos1 pos2 pos3 - position
   )
   (:init
     (not_welded joint1)
@@ -22,6 +22,7 @@
     (reachable_at joint5 pos1)
     (reachable_at joint6 pos1)
     (reachable_at joint6 pos2)
+    (reachable_at joint6 pos3)
     (reachable_at joint7 pos2)
     (reachable_at joint8 pos2)
     (reachable_at joint9 pos2)
@@ -29,7 +30,6 @@
     (at pos1)
     (depends_on joint2 joint1)
     (depends_on joint3 joint1)
-    (depends_on joint3 joint6)
     (depends_on joint5 joint4)
     (depends_on joint6 joint5)
     (depends_on joint8 joint7)
@@ -38,6 +38,7 @@
     (depends_on joint10 joint9)
     (not_executed)
     (not_executing)
+
     (= (avg_joints_per_group) 5)
   )
   ; (:goal

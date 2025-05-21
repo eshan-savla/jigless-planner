@@ -29,6 +29,7 @@ private:
   rclcpp_action::Server<GenerateTransit>::SharedPtr action_server_;
   rclcpp::Time start_time_;
   bool fail_joint_;
+  int fail_count_ = 0;
   int tick_;
   const int duration_ = 2; // Duration in seconds
 
@@ -106,9 +107,11 @@ private:
         break;
       }
 
-      if (fail_joint_ && goal->to_joint == "joint6") {
+      if (tick_ >= 4 && fail_joint_ && goal->to_joint == "joint6") {
         RCLCPP_ERROR(this->get_logger(), "Transit failed to joint: %s", goal->to_joint.c_str());
-        fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        if(fail_count_ >= 1)
+          fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        fail_count_++;
         auto result = std::make_shared<GenerateTransit::Result>();
         result->success = false;
         goal_handle->abort(result);

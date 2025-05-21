@@ -8,10 +8,9 @@
     ;todo: put the initial state's facts and numeric values here
 
     (joint_orientation joint0)
-
+    
     (depends_on joint2 joint1)
     (depends_on joint3 joint1)
-    (depends_on joint3 joint6)
     (depends_on joint5 joint4)
     (depends_on joint6 joint5)
     (depends_on joint8 joint7)
@@ -19,6 +18,7 @@
     (depends_on joint10 joint8)
     (depends_on joint10 joint9)
 
+    (not_joint_measured joint0)
     (not_joint_measured joint1)
     (not_joint_measured joint2)
     (not_joint_measured joint3)
@@ -43,21 +43,21 @@
     (not_welded joint10)
 )
 
-; (:goal
-;     ;todo: put the goal condition here
-;     (and 
-;         (welded joint1)
-;         (welded joint2)
-;         (welded joint3)
-;         (welded joint4)
-;         (welded joint5)
-;         (welded joint6)
-;         (welded joint7)
-;         (welded joint8)
-;         (welded joint9)
-;         (welded joint10)
-;     )
-; )
+(:goal
+    ;todo: put the goal condition here
+    (and 
+        (welded joint1)
+        (welded joint2)
+        (welded joint3)
+        (welded joint4)
+        (welded joint5)
+        (welded joint6)
+        (welded joint7)
+        (welded joint8)
+        (welded joint9)
+        (welded joint10)
+    )
+)
 
 ;un-comment the following line if metric is needed
 ;(:metric minimize (???))

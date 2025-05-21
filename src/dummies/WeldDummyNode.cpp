@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include "weld_interfaces/action/weld.hpp"
+#include "jigless_planner_interfaces/srv/interact_top.hpp"
 
 using namespace std::chrono_literals;
 using Weld = weld_interfaces::action::Weld;
@@ -12,7 +13,7 @@ class WeldDummyServer : public rclcpp::Node
 {
 public:
   WeldDummyServer()
-  : Node("transit_dummy_server"), tick_(0), fail_joint_(false)
+  : Node("transit_dummy_server"), tick_(0), fail_joint_(true)
   {
     this->action_server_ = rclcpp_action::create_server<Weld>(
       this,
@@ -21,14 +22,18 @@ public:
       std::bind(&WeldDummyServer::handle_cancel, this, std::placeholders::_1),
       std::bind(&WeldDummyServer::handle_accepted, this, std::placeholders::_1)
     );
-
+    service_group = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    this->client_ = this->create_client<jigless_planner_interfaces::srv::InteractTop>(
+        "/top_planner/interact_top", rmw_qos_profile_services_default, service_group);
     RCLCPP_INFO(this->get_logger(), "Weld Dummy Server is running.");
   }
 
 private:
   rclcpp_action::Server<Weld>::SharedPtr action_server_;
+  rclcpp::Client<jigless_planner_interfaces::srv::InteractTop>::SharedPtr client_;
+  rclcpp::CallbackGroup::SharedPtr service_group;
   rclcpp::Time start_time_;
-  bool fail_joint_ = false;
+  bool fail_joint_;
   int tick_;
   const int duration_ = 5; // Duration in seconds
 
@@ -81,9 +86,26 @@ private:
         break;
       }
 
-      if (fail_joint_ && goal->joint == "joint6") {
+      if (tick_ >= 4 && fail_joint_ && goal->joint == "joint6") {
         RCLCPP_ERROR(this->get_logger(), "Weld failed on joint: %s", goal->joint.c_str());
         fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        while (!client_->wait_for_service(1s)) {
+          RCLCPP_INFO(this->get_logger(), "Waiting for service to be available...");
+        }
+        auto request = std::make_shared<jigless_planner_interfaces::srv::InteractTop::Request>();
+        request->operation = jigless_planner_interfaces::srv::InteractTop::Request::STOP;
+        auto future = client_->async_send_request(request).future.share();
+        auto status = future.wait_for(3s);
+        if (status == std::future_status::ready) {
+          auto result = future.get();
+          if (result->success) {
+            RCLCPP_INFO(this->get_logger(), "Service call succeeded");
+          } else {
+            RCLCPP_ERROR(this->get_logger(), "Service call failed");
+          }
+        } else {
+          RCLCPP_ERROR(this->get_logger(), "Service call timed out");
+        }
         auto result = std::make_shared<Weld::Result>();
         result->success = false;
         goal_handle->abort(result);

@@ -29,6 +29,7 @@ private:
   rclcpp_action::Server<Validate>::SharedPtr action_server_;
   rclcpp::Time start_time_;
   bool fail_joint_; // Simulate a failure on joint6
+  int fail_count_ = 0;
   int tick_;
   const int duration_ = 2; // Duration in seconds
 
@@ -81,9 +82,11 @@ private:
         break;
       }
 
-      if (fail_joint_ && goal->joint == "joint6") {
+      if (tick_ >= 4 && fail_joint_ && goal->joint == "joint6") {
         RCLCPP_ERROR(this->get_logger(), "Validate failed on joint: %s", goal->joint.c_str());
-        fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        if(fail_count_ >= 1)
+          fail_joint_ = false; // Reset fail_joint_ to prevent repeated failure
+        fail_count_++;
         auto result = std::make_shared<Validate::Result>();
         result->success = false;
         goal_handle->abort(result);

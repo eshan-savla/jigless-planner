@@ -108,7 +108,7 @@ add_executable(weld_dummy_node src/dummies/WeldDummyNode.cpp)
 list(APPEND dummy_nodes weld_dummy_node)
 
 foreach(dummy_node ${dummy_nodes})
-  ament_target_dependencies(${dummy_node} ${dependencies})
+  ament_target_dependencies(${dummy_node} ${dependencies} jigless_planner_interfaces)
 endforeach()
 
 install (DIRECTORY launch pddl behavior_trees_xml config DESTINATION share/${PROJECT_NAME})
