@@ -76,9 +76,11 @@
                 (over all (and
                   (at ?p)
                   (not_executed)
-                  (forall (?j - joint)  
-                    (imply (reachable_at ?j ?p) (commandable ?j))  
-                  )
+                  (forall (?j - joint) (and
+                    (imply (reachable_at ?j ?p) (commandable ?j))
+                    (imply (reachable_at ?j ?p) (not_welded ?j))
+                  ))
+                  
                 ))
               )
     :effect (and 
@@ -105,7 +107,6 @@
           (at end (and 
             (welded ?j)
             (not (not_welded ?j))
-            (not (commandable ?j))
           ))
       )
   )
