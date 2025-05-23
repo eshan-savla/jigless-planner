@@ -76,10 +76,9 @@
                 (over all (and
                   (at ?p)
                   (not_executed)
-                  (forall (?j - joint) (and
+                  (forall (?j - joint) 
                     (imply (reachable_at ?j ?p) (commandable ?j))
-                    (imply (reachable_at ?j ?p) (not_welded ?j))
-                  ))
+                  )
                   
                 ))
               )
