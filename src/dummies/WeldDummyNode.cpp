@@ -13,7 +13,7 @@ class WeldDummyServer : public rclcpp::Node
 {
 public:
   WeldDummyServer()
-  : Node("transit_dummy_server"), tick_(0), fail_joint_(true)
+  : Node("transit_dummy_server"), tick_(0), fail_joint_(false)
   {
     this->action_server_ = rclcpp_action::create_server<Weld>(
       this,
