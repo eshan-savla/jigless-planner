@@ -1,0 +1,20 @@
+- git: {
+    local-name: ros2_planning_system,
+    uri: https://github.com/eshan-savla/ros2_planning_system.git,
+    version: humble-devel
+    }
+- git: {
+    local-name: weld_interfaces,
+    uri: https://github.com/eshan-savla/weld_interfaces.git,
+    version: main
+    }
+- git: {
+    local-name: transit_interfaces,
+    uri: https://github.com/eshan-savla/transit_interfaces.git,
+    version: humble
+    }
+- git: {
+    local-name: jigless_planner_interfaces,
+    uri: https://github.com/eshan-savla/jigless_planner_interfaces.git,
+    version: main
+    }

@@ -29,6 +29,8 @@ def generate_launch_description():
     bottom_ns = LaunchConfiguration('bottom_ns')
     top_ns = LaunchConfiguration('top_ns')
     bottom_name = "bottom_controller"
+    top_problem_file = LaunchConfiguration('top_problem_file')
+    bottom_problem_file = LaunchConfiguration('bottom_problem_file')
 
     # Declare namespaces
     declare_bottom_ns_cmd = DeclareLaunchArgument(
@@ -40,6 +42,18 @@ def generate_launch_description():
         'top_ns',
         default_value='top_planner',
         description='Namespace')
+    
+    declare_top_problem_file_cmd = DeclareLaunchArgument(
+        'top_problem_file',
+        default_value=os.path.join(
+            example_dir, 'pddl', 'top_welding_problem.pddl'),
+        description='Top problem file to use for planning')
+    
+    declare_bottom_problem_file_cmd = DeclareLaunchArgument(
+        'bottom_problem_file',
+        default_value=os.path.join(
+            example_dir, 'pddl', 'weldcell_problem_no_workpiece.pddl'),
+        description='Bottom problem file to use for planning')
 
     # Specify launch bringups
     plansys2_bottom = IncludeLaunchDescription(
@@ -116,7 +130,11 @@ def generate_launch_description():
         name=bottom_name,
         namespace=bottom_ns,
         output='screen',
-        parameters=[]
+        parameters=[
+            {
+                'bottom_problem_file_path': example_dir + '/pddl/test2_adaptability/weldcell_problem_no_workpiece.pddl',
+            }   
+        ]
     )
 
     # Specify the top actions
@@ -312,6 +330,7 @@ def generate_launch_description():
             {
                 'bottom_ns': bottom_ns,
                 'bottom_controller_name': bottom_name,
+                'top_problem_file_path': top_problem_file,
             }
         ]
     )
@@ -320,6 +339,8 @@ def generate_launch_description():
 
     ld.add_action(declare_bottom_ns_cmd)
     ld.add_action(declare_top_ns_cmd)
+    ld.add_action(declare_top_problem_file_cmd)
+    ld.add_action(declare_bottom_problem_file_cmd)
 
     # Declare the launch options
     ld.add_action(plansys2_bottom)

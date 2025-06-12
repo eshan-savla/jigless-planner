@@ -124,10 +124,9 @@ install(TARGETS
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-
 install(PROGRAMS
 scripts/add_problem_client.py 
-scripts/test1_complexity_client.py
+scripts/test1_client.py
 scripts/test2_client_node.py
 scripts/transit_dummy_server.py
 DESTINATION lib/${PROJECT_NAME})
