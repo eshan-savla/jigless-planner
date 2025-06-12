@@ -2,8 +2,38 @@
 
 ## Overview
 
-`jigless-planner` is a ROS 2 package for planning and executing tasks in a jigless manufacturing scenario using the PlanSys2 framework.
+`jigless-planner` is a ROS 2 package for hierarchical online planning and executing welding tasks in a jigless manufacturing scenario using the PlanSys2 framework.
 
+## Quick Start
+Docker images of this package are publicly available on Docker Hub. You can pull the latest image with:
+
+```sh
+docker pull eshansavla0512/jigless-planner:run-1.0
+```
+### Running the framework
+
+1. Start the container and launch the framework:
+    ```sh
+    docker run -it --rm --name jigless-planner eshansavla0512/jigless-planner:run-1.0
+    source /opt/ros/humble/setup.bash
+    source install/setup.bash
+    ros2 launch jigless-planner weldcell_example_launch.py
+    ```
+2. Open a new terminal and run the following command to start the action dummies:
+    ```sh
+    docker exec -it jigless-planner bash
+    source /opt/ros/humble/setup.bash
+    source install/setup.bash
+    ros2 launch jigless-planner dummies.launch.py
+    ```
+3. Open another terminal and run the following command to run an example:
+    ```sh
+    docker exec -it jigless-planner bash
+    source /opt/ros/humble/setup.bash
+    source install/setup.bash
+    ros2 run jigless_planner test1_client --ros-args -p joint_count:=10
+    ```
+The docker container can also be used similarly to run the tests from the [Testing](#testing) section.
 ## Building
 
 1. Install all dependencies (from your workspace root):
@@ -84,4 +114,4 @@ ros2 run jigless_planner test2_client_node --ros-args -p frequency:=<frequency> 
 - **Behavior trees**: Located in `behavior_trees_xml/`.
 - **Parameters**: Located in `config/`.
 
-Edit these files as needed for your scenario.
+Scripts have been provided in the `scripts/` directory to help with generating PDDL files and behavior tree configs. Also contains a script to count topological sorts of a given pddl problem file.
