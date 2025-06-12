@@ -5,7 +5,7 @@
 `jigless-planner` is a ROS 2 package for hierarchical online planning and executing welding tasks in a jigless manufacturing scenario using the PlanSys2 framework.
 
 ## Quick Start
-Docker images of this package are publicly available on Docker Hub. You can pull the latest image with:
+Docker images of this package are publicly available on Docker Hub and are the recommended way to run and test this package. You can pull the latest image with:
 
 ```sh
 docker pull eshansavla0512/jigless-planner:run-1.0
@@ -36,10 +36,10 @@ docker pull eshansavla0512/jigless-planner:run-1.0
 The docker container can also be used similarly to run the tests from the [Testing](#testing) section.
 ## Building
 
-1. Install all dependencies (from your workspace root):
+1. Install all dependencies (from your workspace src folder):
 
     ```sh
-    rosdep install --from-paths src --ignore-src -r -y
+    rosinstall ./jigless-planner/.rosinstall 
     ```
 
 2. Build the package:
