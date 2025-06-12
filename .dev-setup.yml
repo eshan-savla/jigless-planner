@@ -1,0 +1,63 @@
+package_name: "jigless-planner"
+environment: "ros.humble"
+version: "1.0"
+
+docker:
+    registry:
+        url: "eshansavla0512"
+        path: ""
+
+dockerfile:
+    base:
+        from: "ros:humble"
+        tag: "jigless-planner:base-1.0"
+        cmd: ["bash"]
+        build: True
+        build_arguments:
+            secret: id=gitcreds,src=$HOME/.git-credentials
+        registry:
+            tag: "eshansavla0512/jigless-planner:base-1.0"
+    devcontainer:
+        from: "jigless-planner:base-1.0"
+        tag: "jigless-planner:devcontainer-1.0"
+        cmd: ["bash"]
+        build: False
+    ci:
+        from: "jigless-planner:base-1.0"
+        tag: "jigless-planner:ci-1.0"
+        cmd: ["bash"]
+        build: True
+        build_arguments:
+            secret: id=gitcreds,src=$HOME/.git-credentials
+        registry:
+            tag: "eshansavla0512/jigless-planner:ci-1.0"
+        build_cmd: "source /opt/ros/humble/setup.bash && colcon build --symlink-install"
+    run:
+        from: "jigless-planner:base-1.0"
+        tag: "jigless-planner:run-1.0"
+        cmd: ["bash"]
+        build: True
+        build_cmd: "source /opt/ros/humble/setup.bash && colcon build"
+        build_arguments:
+            secret: id=gitcreds,src=$HOME/.git-credentials
+        registry:
+            tag: "eshansavla0512/jigless-planner:run-1.0"
+
+entrypoint:
+    source: ["/opt/ros/humble/setup.bash",
+             "/workspace/install/setup.bash"]
+
+devcontainer:
+    vscode:
+        extensions: ["ms-python.python",
+                    "ms-vscode.cpptools-extension-pack",
+                    "ms-vscode.cmake-tools",
+                    "redhat.vscode-xml",
+                    "mhutchie.git-graph",
+                    "ms-azuretools.vscode-docker",
+                    "mtsmfm.vscode-stl-viewer",
+                    "doxygen",
+                ]
+    feature:
+        packages: "ssh,curl,nano,python3-pip,git"
+        desktop_lite: "False"
