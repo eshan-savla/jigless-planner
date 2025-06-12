@@ -1,7 +1,87 @@
 # jigless-planner
 
-#### TODO:
-- [ ] Create domain model for jigless transit
-- [ ] Create problem file maybe to test
-- [ ] Figure out how planner creates behavior tree
-- [ ] implement BT dummy node for transit.
+## Overview
+
+`jigless-planner` is a ROS 2 package for planning and executing tasks in a jigless manufacturing scenario using the PlanSys2 framework.
+
+## Building
+
+1. Install all dependencies (from your workspace root):
+
+    ```sh
+    rosdep install --from-paths src --ignore-src -r -y
+    ```
+
+2. Build the package:
+
+    ```sh
+    colcon build --symlink-install --packages-select jigless-planner
+    ```
+
+3. Source your workspace after building:
+
+    ```sh
+    source install/setup.bash
+    ```
+
+## Running
+
+Launch files are provided in the `launch/` directory to start the planner and related nodes.
+
+### Example: Weldcell Scenario
+
+To launch the full weldcell example (including planners and controllers):
+
+```sh
+ros2 launch jigless-planner weldcell_example_launch.py
+```
+
+### Other Launch Files
+
+- `controllers.launch.py`: Launches only the top controller node.
+- `dummies.launch.py`: Launches dummy action servers for testing.
+- `test1_complexity.launch.py`, `test1_adaptability.launch.py`, `test2_robustness.launch.py`: Launch various test scenarios for benchmarking and robustness.
+
+To check the arguments of any launch file, you can use:
+
+```sh
+ros2 launch jigless-planner <launch_file_name>.py --show-args
+```
+
+To use any launch file:
+
+```sh
+ros2 launch jigless-planner <launch_file_name>.py
+```
+## Testing
+To run the tests for this package run the following commands in different terminals:
+### Test 1: Complexity
+```sh
+ros2 launch jigless-planner test1_complexity.launch.py
+ros2 launch jigless-planner dummies.launch.py
+ros2 run jigless_planner test1_client --ros-args -p joint_count:=<no_of_joints>
+```
+### Test 2: Adaptability
+- Set the action desired implementation under `src/dummies/`directory to fail at joint6 and rebuild the package.
+- next run:
+```sh
+ros2 launch jigless-planner test1_adaptability.launch.py
+ros2 launch jigless-planner dummies.launch.py
+ros2 run jigless_planner test1_client --ros-args -p joint_count:=10
+```
+### Test 2: Robustness
+- Unset any forced failures in the `src/dummies/` directory.
+- next run:
+```sh
+ros2 launch jigless-planner test2_robustness.launch.py
+ros2 launch jigless-planner dummies.launch.py
+ros2 run jigless_planner test2_client_node --ros-args -p frequency:=<frequency> -p delay:=<delay> -p duration:=<duration>
+```
+
+## Configuration
+
+- **PDDL files**: Located in the `pddl/` directory.
+- **Behavior trees**: Located in `behavior_trees_xml/`.
+- **Parameters**: Located in `config/`.
+
+Edit these files as needed for your scenario.

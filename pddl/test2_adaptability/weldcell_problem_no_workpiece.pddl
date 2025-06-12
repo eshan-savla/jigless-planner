@@ -43,21 +43,21 @@
     (not_welded joint10)
 )
 
-(:goal
-    ;todo: put the goal condition here
-    (and 
-        (welded joint1)
-        (welded joint2)
-        (welded joint3)
-        (welded joint4)
-        (welded joint5)
-        (welded joint6)
-        (welded joint7)
-        (welded joint8)
-        (welded joint9)
-        (welded joint10)
-    )
-)
+; (:goal
+;     ;todo: put the goal condition here
+;     (and 
+;         (welded joint1)
+;         (welded joint2)
+;         (welded joint3)
+;         (welded joint4)
+;         (welded joint5)
+;         (welded joint6)
+;         (welded joint7)
+;         (welded joint8)
+;         (welded joint9)
+;         (welded joint10)
+;     )
+; )
 
 ;un-comment the following line if metric is needed
 ;(:metric minimize (???))
