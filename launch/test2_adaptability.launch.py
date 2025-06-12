@@ -118,7 +118,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             {
-                'bottom_problem_file_path': example_dir + '/pddl/test1_adaptability/weldcell_problem_no_workpiece.pddl',
+                'bottom_problem_file_path': example_dir + '/pddl/test2_adaptability/weldcell_problem_no_workpiece.pddl',
             }   
         ]
     )
@@ -316,7 +316,7 @@ def generate_launch_description():
             {
                 'bottom_ns': bottom_ns,
                 'bottom_controller_name': bottom_name,
-                'top_problem_file_path': example_dir + '/pddl/test1_adaptability/top_welding_problem.pddl',
+                'top_problem_file_path': example_dir + '/pddl/test2_adaptability/top_welding_problem.pddl',
             }
         ]
     )
